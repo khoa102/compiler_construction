@@ -1,11 +1,11 @@
-#ifndef Operand
-#define Operand
+#ifndef Operand_H
+#define Operand_H
 class Operand {
 	private:
 		int operand_type;
 		int register_id;
 	public:
 		Operand (int type, int id); 
-		// static int REGISTER; 
+		static int REGISTER; 
 };
 #endif
