@@ -1,9 +1,11 @@
 %defines
+
 %code requires {
 	/* C declarations and #DEFINE statement */
 	#include <stdio.h>
-	#include <ctype.h>
-	
+	#include <cstring>
+	#include "Instruction.hpp"
+
 	int yyerror(char *errmsg);
 	int yylex(void);
 }
@@ -29,34 +31,35 @@
 input		: /* empty production for empty input */
 			|	input line
 			;
-line		:	expr  NEWLINE										{ printf("Result is %f\n", $1);}
-			|	FUNC_DEF
+line		:	test_assign  NEWLINE										
+			|	func_def
 			;
-FUNC_DEF 	:	TYPE ID '(' PARAM_LISTS ')'  STMT_BLOCK NEWLINE 	{printf("Function def\n");}
+test_assign :	ID ASSGN expr ';'											{printf("Result is %f\n", $3);}
+func_def 	:	type ID '(' param_lists ')'  stmt_block NEWLINE 	{printf("Function def\n");}
 			;
-TYPE 		:	INT
+type 		:	INT
 			|	FLOAT
 			|	VOID
 			;
-PARAM_LISTS : 
+param_lists : 
 			|	PARAMS
 			;	
-PARAMS		: 	TYPE ID ',' PARAM_LISTS
-			|	TYPE ID
+PARAMS		: 	type ID ',' param_lists
+			|	type ID
 			;
-STMT_BLOCK 	:	'{' STMTS '}'
-			|	STMT
+stmt_block 	:	'{' stmts '}'
+			|	stmt
 			;
-STMTS 		:	STMT STMTS
+stmts 		:	stmt stmts
 			|
 			;
-STMT 		:	STMT_ASSGN
+stmt 		:	stmt_assgn
 			|	';'
 			;
-STMT_ASSGN 	:	INT ID ASSGN INT_VAL ';'		{ printf("Assignemnt: int %s = %d\n", $2, $4);}
+stmt_assgn 	:	INT ID ASSGN INT_VAL ';'		{ printf("Assignemnt: int %s = %d\n", $2, $4);}
 			|	FLOAT ID ASSGN FLOAT_VAL ';'	{ printf("Assignemnt: float %s = %f\n", $2, $4);}
 			;
-expr		:	expr '+' term 					{ $$ = $1 + $3; }
+expr		:	expr '+' term 					{ $$ = $1 + $3; Operand dest(Operand::MEM_ADDRESS, 123);  Operand src1(Operand::MEM_ADDRESS, 123); Operand src2(Operand::MEM_ADDRESS, 123); Instruction inst (dest, src1, src2); printf(inst.dumpInstruction());}
 			|	expr '-' term 					{ $$ = $1 - $3; }
 			|	term 							{ $$ = $1; }
 			;
@@ -77,7 +80,9 @@ int yyerror(char *errmsg){
 	printf("%s\n", errmsg);
 }
 
-void main(){
+int main(){
 	printf("Type some input. Enter ? for help.\n");
 	yyparse();
+
+	return 0;
 }

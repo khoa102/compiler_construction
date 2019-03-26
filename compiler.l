@@ -1,4 +1,5 @@
 %option noyywrap
+
 %{
 	#include "compiler.tab.h"
 %}
@@ -6,8 +7,6 @@ alpha [a-zA-Z]
 digit [0-9]
 
 %%
-[\n]        				{ return NEWLINE; }
-[ \t]+      				/* ignore whitespace */;
 "int"						return INT;
 "float"						return FLOAT;
 "void"						return VOID;
@@ -16,4 +15,6 @@ digit [0-9]
 \"[a-zA-Z0-9 ]+\"			{yylval.s_val = strdup(yytext); return STR_VAL;}
 {alpha}({digit}|{alpha})*	{yylval.s_val = strdup(yytext); return ID;}
 "="							return ASSGN;
-[-+*/(){};,]					{return (int) yytext[0];}
+[-+*/(){};,]				{return (int) yytext[0];}
+[\n]        				{ return NEWLINE; }
+[ \t]+      				/* ignore whitespace */;

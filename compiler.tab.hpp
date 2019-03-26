@@ -30,8 +30,8 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef YY_YY_COMPILER_TAB_H_INCLUDED
-# define YY_YY_COMPILER_TAB_H_INCLUDED
+#ifndef YY_YY_COMPILER_TAB_HPP_INCLUDED
+# define YY_YY_COMPILER_TAB_HPP_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -40,17 +40,13 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 3 "compiler.y" /* yacc.c:1909  */
+#line 2 "compiler.ypp" /* yacc.c:1909  */
 
 	/* C declarations and #DEFINE statement */
 	#include <stdio.h>
-	#include <cstring>
 	#include "Instruction.hpp"
 
-	int yyerror(char *errmsg);
-	int yylex(void);
-
-#line 54 "compiler.tab.h" /* yacc.c:1909  */
+#line 50 "compiler.tab.hpp" /* yacc.c:1909  */
 
 /* Token type.  */
 #ifndef YYTOKENTYPE
@@ -74,13 +70,13 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 12 "compiler.y" /* yacc.c:1909  */
+#line 16 "compiler.ypp" /* yacc.c:1909  */
 
 	int i_val;
 	double f_val;
 	char *s_val;
 
-#line 84 "compiler.tab.h" /* yacc.c:1909  */
+#line 80 "compiler.tab.hpp" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -93,4 +89,4 @@ extern YYSTYPE yylval;
 
 int yyparse (void);
 
-#endif /* !YY_YY_COMPILER_TAB_H_INCLUDED  */
+#endif /* !YY_YY_COMPILER_TAB_HPP_INCLUDED  */
