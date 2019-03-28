@@ -23,6 +23,7 @@ Instruction::Instruction(Opcode code, Operand dest, Operand src){
 
 Instruction::Instruction(Opcode code, Operand dest, Operand src1, Operand src2){
 	opcode = code;
+	destOperand = dest;
 	srcOperand1 = src1;
 	srcOperand2 = src2;
 }
@@ -32,10 +33,11 @@ const string Instruction::dumpInstruction(){
 	if (destOperand.getOperandType() != Operand::NONE) result += " " + destOperand.dumpOperand();
 	if (srcOperand1.getOperandType() != Operand::NONE) result += " " + srcOperand1.dumpOperand();
 	if (srcOperand2.getOperandType() != Operand::NONE) result += " " + srcOperand2.dumpOperand();
-
+	result += "\n";
 	return result;
 }
 
+/*
 int main(){
 	Operand test(Operand::MEM_ADDRESS, 123);
 	cout << test.dumpOperand() <<endl;
@@ -45,4 +47,4 @@ int main(){
 	Instruction inst (Instruction::ADD, test, test2);
 	cout<<inst.dumpInstruction()<<endl;
 	return 0;
-}
+}*/

@@ -45,12 +45,13 @@ extern int yydebug;
 	/* C declarations and #DEFINE statement */
 	#include <stdio.h>
 	#include <cstring>
-	#include "Instruction.hpp"
+	#include "BasicBlock.hpp"
+	#include "iostream"
 
 	int yyerror(char *errmsg);
 	int yylex(void);
 
-#line 54 "compiler.tab.h" /* yacc.c:1909  */
+#line 55 "compiler.tab.h" /* yacc.c:1909  */
 
 /* Token type.  */
 #ifndef YYTOKENTYPE
@@ -74,13 +75,14 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 12 "compiler.y" /* yacc.c:1909  */
+#line 22 "compiler.y" /* yacc.c:1909  */
 
 	int i_val;
 	double f_val;
 	char *s_val;
+	Operand *operand;
 
-#line 84 "compiler.tab.h" /* yacc.c:1909  */
+#line 86 "compiler.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

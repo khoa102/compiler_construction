@@ -387,10 +387,10 @@ struct yy_trans_info
 	};
 static yyconst flex_int16_t yy_accept[35] =
     {   0,
-        0,    0,   13,   12,    2,    1,   12,   11,   11,    6,
-       10,    9,    9,    9,    9,    2,    0,    6,    0,    6,
-        9,    9,    9,    9,    8,    7,    9,    3,    9,    7,
-        9,    5,    4,    0
+        0,    0,   13,   12,   11,   10,   12,    9,    9,    4,
+        8,    7,    7,    7,    7,   11,    0,    4,    0,    4,
+        7,    7,    7,    7,    6,    5,    7,    1,    7,    5,
+        7,    3,    2,    0
     } ;
 
 static yyconst YY_CHAR yy_ec[256] =
@@ -484,7 +484,7 @@ int yy_flex_debug = 0;
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
 #line 1 "compiler.l"
-#line 3 "compiler.l"
+#line 4 "compiler.l"
 	#include "compiler.tab.h"
 #line 490 "lex.yy.c"
 
@@ -704,7 +704,7 @@ YY_DECL
 		}
 
 	{
-#line 8 "compiler.l"
+#line 9 "compiler.l"
 
 #line 710 "lex.yy.c"
 
@@ -764,64 +764,64 @@ do_action:	/* This label is used only to access EOF actions. */
 			goto yy_find_action;
 
 case 1:
-/* rule 1 can match eol */
 YY_RULE_SETUP
-#line 9 "compiler.l"
-{ return NEWLINE; }
+#line 10 "compiler.l"
+return INT;
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 10 "compiler.l"
-/* ignore whitespace */;
+#line 11 "compiler.l"
+return FLOAT;
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 11 "compiler.l"
-return INT;
+#line 12 "compiler.l"
+return VOID;
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 12 "compiler.l"
-return FLOAT;
+#line 13 "compiler.l"
+{yylval.i_val = atoi(yytext); return INT_VAL;}	
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 13 "compiler.l"
-return VOID;
+#line 14 "compiler.l"
+{yylval.f_val = atof(yytext); return FLOAT_VAL;}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 14 "compiler.l"
-{yylval.i_val = atoi(yytext); return INT_VAL;}	
+#line 15 "compiler.l"
+{yylval.s_val = strdup(yytext); return STR_VAL;}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 15 "compiler.l"
-{yylval.f_val = atof(yytext); return FLOAT_VAL;}
+#line 16 "compiler.l"
+{yylval.s_val = strdup(yytext); return ID;}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 16 "compiler.l"
-{yylval.s_val = strdup(yytext); return STR_VAL;}
+#line 17 "compiler.l"
+return ASSGN;
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 17 "compiler.l"
-{yylval.s_val = strdup(yytext); return ID;}
+#line 18 "compiler.l"
+{return (int) yytext[0];}
 	YY_BREAK
 case 10:
+/* rule 10 can match eol */
 YY_RULE_SETUP
-#line 18 "compiler.l"
-return ASSGN;
+#line 19 "compiler.l"
+{ return NEWLINE; }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 19 "compiler.l"
-{return (int) yytext[0];}
+#line 20 "compiler.l"
+/* ignore whitespace */;
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 20 "compiler.l"
+#line 21 "compiler.l"
 ECHO;
 	YY_BREAK
 #line 828 "lex.yy.c"
@@ -1825,4 +1825,4 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 20 "compiler.l"
+#line 21 "compiler.l"
