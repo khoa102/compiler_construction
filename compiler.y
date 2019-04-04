@@ -5,6 +5,7 @@
 	#include <stdio.h>
 	#include <cstring>
 	#include "BasicBlock.hpp"
+	#include "SymbolTable.hpp"
 	#include "iostream"
 
 	int yyerror(char *errmsg);
@@ -13,10 +14,11 @@
 
 %code{	
 	BasicBlock* block = new BasicBlock(0);
-	int register_count = 0;
+	SymbolTable symbolTable;
+	int registerCount = 0;
 	int getRegister(){
-		register_count++;
-		return register_count-1;
+		registerCount++;
+		return registerCount-1;
 	}	
 }
 %union{
@@ -52,7 +54,7 @@ test_assign :	ID ASSGN expr ';'
 				cout << "dumpBasicBlock():\n"<< block -> dumpBasicBlock()<<endl;
 			}
 			;
-func_def 	:	type ID '(' param_lists ')'  stmt_block NEWLINE 	{printf("Function def\n");}
+func_def 	:	type ID '(' param_lists ')'  stmt_block NEWLINE 	{cout << "dumpBasicBlock():\n"<< block -> dumpBasicBlock()<<endl;}
 			;
 type 		:	INT
 			|	FLOAT
@@ -70,11 +72,59 @@ stmt_block 	:	'{' stmts '}'
 stmts 		:	stmt stmts
 			|
 			;
-stmt 		:	stmt_assgn
+stmt 		:	stmt_decl
+			| 	stmt_assgn
 			|	';'
 			;
-stmt_assgn 	:	INT ID ASSGN INT_VAL ';'		{ }
+stmt_decl 	:	INT ID ASSGN expr ';'		
+			{ 
+				if (!symbolTable.find($2)){
+					// Create destination operand
+					int registerNo = getRegister();
+					Operand *dest = new Operand(Operand::REGISTER,registerNo);
+
+					// Create a divide instruction
+					Instruction inst (Instruction::STORE, *dest, *$4);
+
+					// Add instruction to current block
+					block -> pushBackInstruction(inst);
+					
+					// Remove source operands
+					delete $4;
+
+					symbolTable.insert($2, registerNo, Node::INT, Node::GLOBAL, 0);
+				} else {
+					// The variable is already declared. Print errors
+				}
+			}
+			
 			|	FLOAT ID ASSGN FLOAT_VAL ';'	{ }
+			;
+stmt_assgn  :	ID ASSGN expr ';'
+			{
+				if (symbolTable.find($1)){
+					// Variable is declared, we can assign new value.
+					
+					// Get the node for the variable
+					Node temp = symbolTable.getNode($1);
+
+					// Check to see correct type
+					if (temp.getType() == Node::INT){
+						// Correct type. Update variable
+						Operand *dest = new Operand(Operand::REGISTER,temp.getRegister());
+
+						// Create a divide instruction
+						Instruction inst (Instruction::STORE, *dest, *$3);
+
+						// Add instruction to current block
+						block -> pushBackInstruction(inst);
+					} else {
+						// Wrong type. Errors
+					}
+				} else {
+					// Variable is not declared. Print errors.
+				}
+			}
 			;
 expr		:	expr '+' term
 			{ 
@@ -163,10 +213,23 @@ factor		:	'(' expr ')'					{ $$  = $2;}
 			}
 			|	ID
 			{
-				// This is a temporary value. It should use the register number that is stored inside the symbol table.
-				int register_count = getRegister();
-				Operand *dest = new Operand(Operand::REGISTER, register_count);
-				$$ = dest;
+				if (symbolTable.find($1)){
+					// Variable is declared, we can assign new value.
+					
+					// Get the node for the variable
+					Node temp = symbolTable.getNode($1);
+
+					// Check to see correct type
+					if (temp.getType() == Node::INT){
+						// Correct type. Update variable
+						Operand *dest = new Operand(Operand::REGISTER,temp.getRegister());
+						$$ = dest;
+					} else {
+						// Wrong type. Errors
+					}
+				} else {
+					// Variable is not declared. Print errors.
+				}
 			}
 			;
 

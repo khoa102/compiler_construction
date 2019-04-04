@@ -7,7 +7,7 @@ using namespace std;
 Node::Node(){
 	this->identifier = "";
 	this->type = NONE;
-	this->scope = NONE;
+	this->scope = GLOBAL;
 	this->registerNo = 0;
 	this->lineNo = 0;
 }
@@ -19,6 +19,19 @@ Node::Node(string key, int registerNo, IdType type, ScopeType scope, int lineNo)
 	this->registerNo = registerNo;
 	this->lineNo = lineNo;
 }
+
+int Node::getRegister(){
+	return this->registerNo;
+}
+
+Node::IdType Node::getType(){
+	return this->type;
+}
+
+Node::ScopeType Node::getScope(){
+	return this->scope;
+}
+
 
 string Node::dumpNode(){
 	ostringstream os;
@@ -78,6 +91,26 @@ bool SymbolTable::modify(string id, int registerNo, Node::IdType type, Node::Sco
 	return false;
 }
 
+int SymbolTable::getRegister(string id){
+	int index = hash(id);
+	for (std::vector<Node>::iterator it = table[index].begin(); it != table[index].end(); ++it){
+		if (it->identifier == id){
+			return it->registerNo;
+		}
+	}
+	return -1;
+}
+Node SymbolTable::getNode(string id){
+	int index = hash(id);
+	for (std::vector<Node>::iterator it = table[index].begin(); it != table[index].end(); ++it){
+		if (it->identifier == id){
+			return *it;
+		}
+	}
+	Node node;
+	return node;
+}
+
 std::string SymbolTable::dumpTable(){
 	string result = "SymbolTable\n";
 	for (int i = 0; i < 26; i++){
@@ -87,6 +120,7 @@ std::string SymbolTable::dumpTable(){
 	}
 	return result;
 }
+/*
 int main(){
 	SymbolTable testTable;
 	testTable.insert("a", 1, Node::INT, Node::GLOBAL, 1);
@@ -103,3 +137,4 @@ int main(){
 	cout << Node::GLOBAL <<endl;
 	return 0;
 }
+*/
