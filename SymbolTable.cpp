@@ -4,19 +4,21 @@
 #include <iostream>
 #include <sstream>
 using namespace std;
+
 Node::Node(){
 	this->identifier = "";
-	this->type = NONE;
+	this->idType = VAR;
 	this->scope = GLOBAL;
-	this->registerNo = 0;
-	this->lineNo = 0;
+	this->registerNo = -1;
+	this->dataType = NULL_T;
+	this->lineNo = -1;
 }
-
-Node::Node(string key, int registerNo, IdType type, ScopeType scope, int lineNo){
+Node::Node(string key, int registerNo, IdType idType, ScopeType scope, DataType dataType, int lineNo){
 	this->identifier = key;
-	this->type = type;
+	this->idType = idType;
 	this->scope = scope;
 	this->registerNo = registerNo;
+	this->dataType = dataType;
 	this->lineNo = lineNo;
 }
 
@@ -24,10 +26,12 @@ int Node::getRegister(){
 	return this->registerNo;
 }
 
-Node::IdType Node::getType(){
-	return this->type;
+Node::IdType Node::getIdType(){
+	return this->idType;
 }
-
+DataType Node::getDataType(){
+	return this->dataType;
+}
 Node::ScopeType Node::getScope(){
 	return this->scope;
 }
@@ -35,7 +39,7 @@ Node::ScopeType Node::getScope(){
 
 string Node::dumpNode(){
 	ostringstream os;
-	os << "Id: " << identifier << "\tType: " << type << "\tScope: " << scope <<"\tRegister Num: " << registerNo << "\tLine Num: " << lineNo <<endl;
+	os << "Id: " << identifier << "\tidType: " << idType << "\tScope: " << scope <<"\tRegister Num: " << registerNo << "\tDataType: "<< dataType<< "\tLine Num: " << lineNo <<endl;
 	return os.str();
 }
 
@@ -48,9 +52,9 @@ int SymbolTable::hash(string id){
 	return int(std::toupper(id[0])) - 65;
 }
 
-bool SymbolTable::insert(string id, int registerNo, Node::IdType type, Node::ScopeType scope, int lineNo){
+bool SymbolTable::insert(string id, int registerNo, Node::IdType idType, Node::ScopeType scope, DataType dataType, int lineNo){
 	int index = hash(id);
-	Node data (id, registerNo, type, scope, lineNo);
+	Node data (id, registerNo, idType, scope, dataType, lineNo);
 	table[index].push_back(data);
 }
 
@@ -75,11 +79,11 @@ bool SymbolTable::deleteRecord(string id){
 	return false;
 }
 
-bool SymbolTable::modify(string id, int registerNo, Node::IdType type, Node::ScopeType scope, int lineNo){
+bool SymbolTable::modify(string id, int registerNo, Node::IdType idType, Node::ScopeType scope, DataType dataType, int lineNo){
 	int index = hash(id);
 	for (std::vector<Node>::iterator it = table[index].begin(); it != table[index].end(); ++it){
 		if (it->identifier == id){
-			Node temp(id, registerNo, type, scope, lineNo);
+			Node temp(id, registerNo, idType, scope, dataType, lineNo);
 			*it = temp;
 			// it->type = type;
 			// it->scope = scope;

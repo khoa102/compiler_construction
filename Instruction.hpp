@@ -29,6 +29,8 @@ class Instruction{
 						LESS_THAN,
 						GREATER_THAN,
 						LESS_EQUAL,
+						AND,
+						OR,
 						// control flow instructions:
 						JUMP,				// unconditional jump [dest_label]
 						JUMP_TRUE,			// conditional jump [dest_label] [src_op] if src_op is true
@@ -48,7 +50,7 @@ class Instruction{
 		Opcode opcode;
 		Operand srcOperand1, srcOperand2, destOperand;
 
-		const string opcodeNameList[17] = {	"ADD",
+		const string opcodeNameList[19] = {	"ADD",
 											"SUB",
 											"MUL",
 											"DIV",
@@ -61,12 +63,14 @@ class Instruction{
 											"LT",
 											"GT",
 											"LE",
+											"AND",
+											"OR",
 											"JMP",
 											"JMPT",
 											"JMPF",
 											"NO-OP"};
 
-		const string opcodeComments[17] = {	"[dest_op] = [src_op_1] + [src_op_2]",
+		const string opcodeComments[19] = {	"[dest_op] = [src_op_1] + [src_op_2]",
 											"[dest_op] = [src_op_1] - [src_op_2]",
 											"[dest_op] = [src_op_1] * [src_op_2]",
 											"[dest_op] = [src_op_1] / [src_op_2]",
@@ -79,6 +83,8 @@ class Instruction{
 											"[dest_op] = [src_op_1] <  [src_op_2]",
 											"[dest_op] = [src_op_1] >  [src_op_2]",
 											"[dest_op] = [src_op_1] <= [src_op_2]",
+											"[dest_op] = [dest_op] && [src_op]",
+											"[dest_op] = [dest_op] || [src_op]",
 											"[dest_op: label]",
 											"[dest_op: label] if [src_op_1: 0 or 1] is 1",
 											"[dest_op: label] if [src_op_1: 0 or 1] is 0",

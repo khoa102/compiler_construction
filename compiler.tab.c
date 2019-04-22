@@ -99,12 +99,13 @@ extern int yydebug;
 	#include <stdio.h>
 	#include <cstring>
 	#include "BasicBlock.hpp"
-	#include "iostream"
+	#include "SymbolTable.hpp"
+	#include <iostream>
 
-	int yyerror(char *errmsg);
+	int yyerror(char const *errmsg);
 	int yylex(void);
 
-#line 108 "compiler.tab.c" /* yacc.c:355  */
+#line 109 "compiler.tab.c" /* yacc.c:355  */
 
 /* Token type.  */
 #ifndef YYTOKENTYPE
@@ -114,12 +115,27 @@ extern int yydebug;
     INT = 258,
     FLOAT = 259,
     VOID = 260,
-    INT_VAL = 261,
-    STR_VAL = 262,
-    FLOAT_VAL = 263,
-    ID = 264,
-    ASSGN = 265,
-    NEWLINE = 266
+    CHAR = 261,
+    BOOL = 262,
+    INT_VAL = 263,
+    STR_VAL = 264,
+    FLOAT_VAL = 265,
+    ID = 266,
+    TRUE = 267,
+    FALSE = 268,
+    CHAR_VAL = 269,
+    IF = 270,
+    ELSE = 271,
+    ASSGN = 272,
+    LO_OR = 273,
+    LO_AND = 274,
+    EQ = 275,
+    NE = 276,
+    LE = 277,
+    GE = 278,
+    LT = 279,
+    GT = 280,
+    NEWLINE = 281
   };
 #endif
 
@@ -128,14 +144,17 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 22 "compiler.y" /* yacc.c:355  */
+#line 24 "compiler.y" /* yacc.c:355  */
 
-	int i_val;
-	double f_val;
-	char *s_val;
+	int 	i_val;
+	double 	f_val;
+	char    c_val;
+	bool	b_val;
+	char 	*s_val;
 	Operand *operand;
+	Instruction::Opcode  opcode;
 
-#line 139 "compiler.tab.c" /* yacc.c:355  */
+#line 158 "compiler.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -152,18 +171,19 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 156 "compiler.tab.c" /* yacc.c:358  */
+#line 175 "compiler.tab.c" /* yacc.c:358  */
 /* Unqualified %code blocks.  */
-#line 14 "compiler.y" /* yacc.c:359  */
+#line 15 "compiler.y" /* yacc.c:359  */
 	
 	BasicBlock* block = new BasicBlock(0);
-	int register_count = 0;
+	SymbolTable symbolTable;
+	int registerCount = 0;
 	int getRegister(){
-		register_count++;
-		return register_count-1;
+		registerCount++;
+		return registerCount-1;
 	}	
 
-#line 167 "compiler.tab.c" /* yacc.c:359  */
+#line 187 "compiler.tab.c" /* yacc.c:359  */
 
 #ifdef short
 # undef short
@@ -405,21 +425,21 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  2
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   59
+#define YYLAST   105
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  22
+#define YYNTOKENS  37
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  15
+#define YYNNTS  20
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  32
+#define YYNRULES  51
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  61
+#define YYNSTATES  92
 
 /* YYTRANSLATE[YYX] -- Symbol number corresponding to YYX as returned
    by yylex, with out-of-bounds checking.  */
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   266
+#define YYMAXUTOK   281
 
 #define YYTRANSLATE(YYX)                                                \
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
@@ -432,15 +452,15 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-      17,    18,    13,    11,    19,    12,     2,    14,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,     2,    16,
+      32,    33,    28,    26,    34,    27,     2,    29,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,    31,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,    20,     2,    21,     2,     2,     2,     2,
+       2,     2,     2,    35,     2,    36,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -454,17 +474,21 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
-       5,     6,     7,     8,     9,    10,    15
+       5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
+      15,    16,    17,    18,    19,    20,    21,    22,    23,    24,
+      25,    30
 };
 
 #if YYDEBUG
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
-static const yytype_uint8 yyrline[] =
+static const yytype_uint16 yyrline[] =
 {
-       0,    43,    43,    44,    46,    47,    48,    50,    55,    57,
-      58,    59,    61,    62,    64,    65,    67,    68,    70,    71,
-      73,    74,    76,    77,    79,    98,   117,   119,   138,   156,
-     158,   159,   164
+       0,    56,    56,    57,    59,    60,    61,    63,    68,    70,
+      71,    72,    73,    75,    76,    78,    79,    81,    82,    84,
+      85,    87,    88,    89,    90,    92,   115,   138,   168,   173,
+     198,   223,   225,   246,   251,   256,   280,   281,   282,   283,
+     284,   285,   287,   311,   335,   337,   361,   384,   386,   387,
+     392,   397
 };
 #endif
 
@@ -473,11 +497,14 @@ static const yytype_uint8 yyrline[] =
    First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
 {
-  "$end", "error", "$undefined", "INT", "FLOAT", "VOID", "INT_VAL",
-  "STR_VAL", "FLOAT_VAL", "ID", "ASSGN", "'+'", "'-'", "'*'", "'/'",
-  "NEWLINE", "';'", "'('", "')'", "','", "'{'", "'}'", "$accept", "input",
-  "line", "test_assign", "func_def", "type", "param_lists", "params",
-  "stmt_block", "stmts", "stmt", "stmt_assgn", "expr", "term", "factor", YY_NULLPTR
+  "$end", "error", "$undefined", "INT", "FLOAT", "VOID", "CHAR", "BOOL",
+  "INT_VAL", "STR_VAL", "FLOAT_VAL", "ID", "TRUE", "FALSE", "CHAR_VAL",
+  "IF", "ELSE", "ASSGN", "LO_OR", "LO_AND", "EQ", "NE", "LE", "GE", "LT",
+  "GT", "'+'", "'-'", "'*'", "'/'", "NEWLINE", "';'", "'('", "')'", "','",
+  "'{'", "'}'", "$accept", "input", "line", "test_assign", "func_def",
+  "type", "param_lists", "params", "stmt_block", "stmts", "stmt",
+  "stmt_decl", "stmt_assgn", "stmt_if", "bool_expr", "bool_base",
+  "compare", "expr", "term", "factor", YY_NULLPTR
 };
 #endif
 
@@ -487,17 +514,18 @@ static const char *const yytname[] =
 static const yytype_uint16 yytoknum[] =
 {
        0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
-     265,    43,    45,    42,    47,   266,    59,    40,    41,    44,
-     123,   125
+     265,   266,   267,   268,   269,   270,   271,   272,   273,   274,
+     275,   276,   277,   278,   279,   280,    43,    45,    42,    47,
+     281,    59,    40,    41,    44,   123,   125
 };
 # endif
 
-#define YYPACT_NINF -6
+#define YYPACT_NINF -28
 
 #define yypact_value_is_default(Yystate) \
-  (!!((Yystate) == (-6)))
+  (!!((Yystate) == (-28)))
 
-#define YYTABLE_NINF -1
+#define YYTABLE_NINF -36
 
 #define yytable_value_is_error(Yytable_value) \
   0
@@ -506,13 +534,16 @@ static const yytype_uint16 yytoknum[] =
      STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-      -6,     0,    -6,    -6,    -6,    -6,    -6,    26,     6,    -6,
-      -5,    -6,     7,    15,    21,    -6,     6,    -6,    10,    -6,
-      -4,     6,     6,    -6,     6,     6,    13,    -6,    28,    21,
-      21,    -6,    -6,    -6,    30,    22,    -6,    24,    -2,    28,
-      35,    36,    -6,     4,    31,    -6,    -6,    -6,    37,    38,
-      29,     4,    -6,    43,    44,    -6,    -6,    39,    40,    -6,
-      -6
+     -28,     3,   -28,   -28,   -28,   -28,   -28,   -28,   -28,    -2,
+      30,   -28,     4,   -28,    20,    63,   -27,   -28,    30,   -28,
+      31,   -28,    -3,    30,    30,   -28,    30,    30,    39,   -28,
+      81,   -27,   -27,   -28,   -28,   -28,    26,     6,   -28,    11,
+       1,    81,    32,    45,    42,    37,   -28,    15,    33,   -28,
+     -28,   -28,   -28,   -28,    54,    60,    30,    12,    43,    15,
+     -28,    30,    30,    41,     9,   -28,   -28,    66,    73,    27,
+     -28,   -28,    47,    49,   -28,     1,    12,    12,   -28,   -28,
+     -28,   -28,   -28,   -28,    30,   -28,   -28,    57,   -28,   -28,
+      55,   -28
 };
 
   /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -520,81 +551,101 @@ static const yytype_int8 yypact[] =
      means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-       2,     0,     1,     9,    10,    11,    31,    32,     0,     3,
-       0,     6,     0,     0,    26,    29,     0,    32,     0,     4,
-       0,     0,     0,     5,     0,     0,     0,    30,    12,    24,
-      25,    27,    28,     7,     0,     0,    13,    15,     0,     0,
-       0,     0,    21,    19,     0,    17,    20,    14,     0,     0,
-       0,    19,     8,     0,     0,    16,    18,     0,     0,    22,
-      23
+       2,     0,     1,     9,    10,    11,    12,    49,    50,    51,
+       0,     3,     0,     6,     0,     0,    44,    47,     0,    51,
+       0,     4,     0,     0,     0,     5,     0,     0,     0,    48,
+      13,    42,    43,    45,    46,     7,     0,     0,    14,    16,
+       0,     0,     0,     0,     0,     0,    24,    20,     0,    18,
+      21,    22,    23,    15,     0,     0,     0,     0,     0,    20,
+       8,     0,     0,     0,    51,    33,    34,     0,    31,     0,
+      17,    19,     0,     0,    27,     0,     0,     0,    38,    39,
+      40,    41,    36,    37,     0,    25,    26,     0,    29,    30,
+      32,    28
 };
 
   /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-      -6,    -6,    -6,    -6,    -6,    50,    -6,    14,    -6,     8,
-      19,    -6,     3,    16,    17
+     -28,   -28,   -28,   -28,   -28,    95,   -28,    59,    28,    46,
+     -26,   -28,   -28,   -28,   -28,    18,   -28,    -1,    74,    75
 };
 
   /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-      -1,     1,     9,    10,    11,    34,    35,    36,    44,    50,
-      51,    46,    13,    14,    15
+      -1,     1,    11,    12,    13,    36,    37,    38,    48,    58,
+      49,    50,    51,    52,    67,    68,    84,    69,    16,    17
 };
 
   /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
      positive, shift that token.  If negative, reduce the rule whose
      number is the opposite.  If YYTABLE_NINF, syntax error.  */
-static const yytype_uint8 yytable[] =
+static const yytype_int8 yytable[] =
 {
-       2,    40,    41,     3,     4,     5,     6,    40,    41,     7,
-      19,    18,     6,    28,    42,    17,    20,     8,    43,    26,
-      42,    21,    22,     8,    21,    22,    21,    22,    27,    33,
-      23,     3,     4,     5,    24,    25,    16,    29,    30,    37,
-      38,    31,    32,    39,    48,    49,    52,    53,    54,    57,
-      55,    12,    58,    47,     0,    59,    60,    45,     0,    56
+      15,    26,    27,     2,    42,    43,     3,     4,     5,    20,
+       6,     7,    44,     8,     9,    18,    45,    28,    42,    43,
+       7,    59,     8,    64,    65,    66,    44,   -35,   -35,    30,
+      45,    22,    46,    59,    21,    10,    47,    39,     7,    40,
+       8,    19,   -35,    54,    10,    41,    46,    78,    79,    80,
+      81,    82,    83,    23,    24,    63,    55,    23,    24,    56,
+      72,    73,    10,    60,    29,    23,    24,    23,    24,    57,
+      35,    61,    74,    23,    24,    23,    24,    62,    85,    70,
+      86,    23,    24,    90,     3,     4,     5,    91,     6,    23,
+      24,    76,    77,    25,    88,    89,    14,    31,    32,    75,
+      53,    33,    34,    87,     0,    71
 };
 
 static const yytype_int8 yycheck[] =
 {
-       0,     3,     4,     3,     4,     5,     6,     3,     4,     9,
-      15,     8,     6,    17,    16,     9,     9,    17,    20,    16,
-      16,    11,    12,    17,    11,    12,    11,    12,    18,    16,
-      15,     3,     4,     5,    13,    14,    10,    21,    22,     9,
-      18,    24,    25,    19,     9,     9,    15,    10,    10,     6,
-      21,     1,     8,    39,    -1,    16,    16,    38,    -1,    51
+       1,    28,    29,     0,     3,     4,     3,     4,     5,    10,
+       7,     8,    11,    10,    11,    17,    15,    18,     3,     4,
+       8,    47,    10,    11,    12,    13,    11,    18,    19,    32,
+      15,    11,    31,    59,    30,    32,    35,    11,     8,    33,
+      10,    11,    33,    11,    32,    34,    31,    20,    21,    22,
+      23,    24,    25,    26,    27,    56,    11,    26,    27,    17,
+      61,    62,    32,    30,    33,    26,    27,    26,    27,    32,
+      31,    17,    31,    26,    27,    26,    27,    17,    31,    36,
+      31,    26,    27,    84,     3,     4,     5,    30,     7,    26,
+      27,    18,    19,    30,    76,    77,     1,    23,    24,    33,
+      41,    26,    27,    75,    -1,    59
 };
 
   /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
      symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,    23,     0,     3,     4,     5,     6,     9,    17,    24,
-      25,    26,    27,    34,    35,    36,    10,     9,    34,    15,
-       9,    11,    12,    15,    13,    14,    34,    18,    17,    35,
-      35,    36,    36,    16,    27,    28,    29,     9,    18,    19,
-       3,     4,    16,    20,    30,    32,    33,    29,     9,     9,
-      31,    32,    15,    10,    10,    21,    31,     6,     8,    16,
-      16
+       0,    38,     0,     3,     4,     5,     7,     8,    10,    11,
+      32,    39,    40,    41,    42,    54,    55,    56,    17,    11,
+      54,    30,    11,    26,    27,    30,    28,    29,    54,    33,
+      32,    55,    55,    56,    56,    31,    42,    43,    44,    11,
+      33,    34,     3,     4,    11,    15,    31,    35,    45,    47,
+      48,    49,    50,    44,    11,    11,    17,    32,    46,    47,
+      30,    17,    17,    54,    11,    12,    13,    51,    52,    54,
+      36,    46,    54,    54,    31,    33,    18,    19,    20,    21,
+      22,    23,    24,    25,    53,    31,    31,    45,    52,    52,
+      54,    30
 };
 
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,    22,    23,    23,    24,    24,    24,    25,    26,    27,
-      27,    27,    28,    28,    29,    29,    30,    30,    31,    31,
-      32,    32,    33,    33,    34,    34,    34,    35,    35,    35,
-      36,    36,    36
+       0,    37,    38,    38,    39,    39,    39,    40,    41,    42,
+      42,    42,    42,    43,    43,    44,    44,    45,    45,    46,
+      46,    47,    47,    47,    47,    48,    48,    49,    50,    51,
+      51,    51,    52,    52,    52,    52,    53,    53,    53,    53,
+      53,    53,    54,    54,    54,    55,    55,    55,    56,    56,
+      56,    56
 };
 
   /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
        0,     2,     0,     2,     2,     2,     1,     4,     7,     1,
-       1,     1,     0,     1,     4,     2,     3,     1,     2,     0,
-       1,     1,     5,     5,     3,     3,     1,     3,     3,     1,
-       3,     1,     1
+       1,     1,     1,     0,     1,     4,     2,     3,     1,     2,
+       0,     1,     1,     1,     1,     5,     5,     4,     6,     3,
+       3,     1,     3,     1,     1,     1,     1,     1,     1,     1,
+       1,     1,     3,     3,     1,     3,     3,     1,     3,     1,
+       1,     1
 };
 
 
@@ -1271,36 +1322,287 @@ yyreduce:
   switch (yyn)
     {
         case 7:
-#line 51 "compiler.y" /* yacc.c:1646  */
+#line 64 "compiler.y" /* yacc.c:1646  */
     {
 				cout << "dumpBasicBlock():\n"<< block -> dumpBasicBlock()<<endl;
 			}
-#line 1279 "compiler.tab.c" /* yacc.c:1646  */
+#line 1330 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 55 "compiler.y" /* yacc.c:1646  */
-    {printf("Function def\n");}
-#line 1285 "compiler.tab.c" /* yacc.c:1646  */
+#line 68 "compiler.y" /* yacc.c:1646  */
+    {cout << "dumpBasicBlock():\n"<< block -> dumpBasicBlock()<<endl;}
+#line 1336 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 22:
-#line 76 "compiler.y" /* yacc.c:1646  */
-    { }
-#line 1291 "compiler.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 23:
-#line 77 "compiler.y" /* yacc.c:1646  */
-    { }
-#line 1297 "compiler.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 24:
-#line 80 "compiler.y" /* yacc.c:1646  */
+  case 25:
+#line 93 "compiler.y" /* yacc.c:1646  */
     { 
+				if (!symbolTable.find((yyvsp[-3].s_val))){
+					// Create destination operand
+					int registerNo = getRegister();
+					Operand *dest = new Operand(Operand::REGISTER,registerNo, INT_T);
+
+					// Create a Store instruction
+					Instruction inst (Instruction::STORE, *dest, *(yyvsp[-1].operand));
+
+					// Add instruction to current block
+					block -> pushBackInstruction(inst);
+					
+					// Remove source operands
+					delete (yyvsp[-1].operand);
+
+					symbolTable.insert((yyvsp[-3].s_val), registerNo, Node::VAR, Node::GLOBAL, INT_T, 0);
+
+				} else {
+					// The variable is already declared. Print errors
+				}
+			}
+#line 1362 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 26:
+#line 115 "compiler.y" /* yacc.c:1646  */
+    { 
+				if (!symbolTable.find((yyvsp[-3].s_val))){
+					// Create destination operand
+					int registerNo = getRegister();
+					Operand *dest = new Operand(Operand::REGISTER,registerNo, FLOAT_T);
+
+					// Create a store instruction
+					Instruction inst (Instruction::STORE, *dest, *(yyvsp[-1].operand));
+
+					// Add instruction to current block
+					block -> pushBackInstruction(inst);
+					
+					// Remove source operands
+					delete (yyvsp[-1].operand);
+
+					symbolTable.insert((yyvsp[-3].s_val), registerNo, Node::VAR, Node::GLOBAL, FLOAT_T, 0);
+				} else {
+					// The variable is already declared. Print errors
+					string errmsg = "Variable is not declared!";
+					yyerror(errmsg.c_str());
+				}
+			}
+#line 1389 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 27:
+#line 139 "compiler.y" /* yacc.c:1646  */
+    {
+				if (symbolTable.find((yyvsp[-3].s_val))){
+					// Variable is declared, we can assign new value.
+					
+					// Get the node for the variable
+					Node temp = symbolTable.getNode((yyvsp[-3].s_val));
+
+					// Check to see correct type
+					if (temp.getDataType() == (yyvsp[-1].operand)->getDataType()){
+						// Correct type. Update variable
+						Operand *dest = new Operand(Operand::REGISTER,temp.getRegister(), temp.getDataType());
+
+						// Create a store instruction
+						Instruction inst (Instruction::STORE, *dest, *(yyvsp[-1].operand));
+
+						// Add instruction to current block
+						block -> pushBackInstruction(inst);
+					} else {
+						// Wrong type. Errors
+						string errmgs = "The expr is not the same type as the ID.";
+						yyerror(errmgs.c_str());
+					}
+				} else {
+					// Variable is not declared. Print errors.
+					string errmsg = "Variable is not declared!";
+					yyerror(errmsg.c_str());
+				}
+			}
+#line 1422 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 28:
+#line 169 "compiler.y" /* yacc.c:1646  */
+    {
+
+			}
+#line 1430 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 29:
+#line 174 "compiler.y" /* yacc.c:1646  */
+    {
+				// Setting the type of Operand
+				DataType type = BOOL_T;
+
 				// Create destination operand
-				Operand *dest = new Operand(Operand::REGISTER, getRegister());
+				Operand *dest = new Operand(Operand::REGISTER, getRegister(), type);
+
+				// Store the first part into the register. This is so that data in $1 and $3 remain unchanged.
+				Instruction inst (Instruction::STORE, *dest, *(yyvsp[0].operand));
+
+				// Add instruction to current block
+				block -> pushBackInstruction(inst);
+				
+				// Doing the AND operation
+				Instruction inst2 (Instruction::AND, *dest, *(yyvsp[-2].operand));
+				block -> pushBackInstruction(inst2);
+
+				// Remove source operands
+				delete (yyvsp[-2].operand);
+				delete (yyvsp[0].operand);
+
+				// Return destination operand
+				(yyval.operand) = dest;
+			}
+#line 1459 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 30:
+#line 199 "compiler.y" /* yacc.c:1646  */
+    {
+				// Setting the type of Operand
+				DataType type = BOOL_T;
+
+				// Create destination operand
+				Operand *dest = new Operand(Operand::REGISTER, getRegister(), type);
+
+				// Store the first part into the register. This is so that data in $1 and $3 remain unchanged.
+				Instruction inst (Instruction::STORE, *dest, *(yyvsp[-2].operand));
+
+				// Add instruction to current block
+				block -> pushBackInstruction(inst);
+				
+				// Doing the AND operation
+				Instruction inst2 (Instruction::OR, *dest, *(yyvsp[0].operand));
+				block -> pushBackInstruction(inst2);
+
+				// Remove source operands
+				delete (yyvsp[-2].operand);
+				delete (yyvsp[0].operand);
+
+				// Return destination operand
+				(yyval.operand) = dest;
+			}
+#line 1488 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 32:
+#line 226 "compiler.y" /* yacc.c:1646  */
+    {
+				// Setting the type of Operand
+				DataType type = BOOL_T;
+
+				// Create destination operand
+				Operand *dest = new Operand(Operand::REGISTER, getRegister(), type);
+
+				// Create Instruction using $2 as the instruction
+				Instruction inst ((yyvsp[-1].opcode), *dest, *(yyvsp[-2].operand), *(yyvsp[0].operand));
+
+				// Add instruction to current block
+				block -> pushBackInstruction(inst);
+				
+				// Remove source operands
+				delete (yyvsp[-2].operand);
+				delete (yyvsp[0].operand);
+
+				// Return destination operand
+				(yyval.operand) = dest;
+			}
+#line 1513 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 33:
+#line 247 "compiler.y" /* yacc.c:1646  */
+    {
+				Operand *dest = new Operand(Operand::CONST, (yyvsp[0].b_val));
+				(yyval.operand) = dest; 
+			}
+#line 1522 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 34:
+#line 252 "compiler.y" /* yacc.c:1646  */
+    {
+				Operand *dest = new Operand(Operand::CONST, (yyvsp[0].b_val));
+				(yyval.operand) = dest; 
+			}
+#line 1531 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 35:
+#line 257 "compiler.y" /* yacc.c:1646  */
+    {
+				if (symbolTable.find((yyvsp[0].s_val))){
+					// Variable is declared, we can assign new value.
+					
+					// Get the node for the variable
+					Node temp = symbolTable.getNode((yyvsp[0].s_val));
+
+					
+					// Correct type. Update variable
+					if (temp.getDataType() == BOOL_T){
+						Operand *dest = new Operand(Operand::REGISTER,temp.getRegister(), temp.getDataType());
+						(yyval.operand) = dest;
+					} else {
+						string errmsg = "Variable is not of type Bool to be evaluated!";
+						yyerror(errmsg.c_str());
+					}
+				} else {
+					// Variable is not declared. Print errors.
+					string errmsg = "Variable is not declared!";
+					yyerror(errmsg.c_str());
+				}
+			}
+#line 1558 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 36:
+#line 280 "compiler.y" /* yacc.c:1646  */
+    {(yyval.opcode) = Instruction::LESS_THAN;}
+#line 1564 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 37:
+#line 281 "compiler.y" /* yacc.c:1646  */
+    {(yyval.opcode) = Instruction::GREATER_THAN;}
+#line 1570 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 38:
+#line 282 "compiler.y" /* yacc.c:1646  */
+    {(yyval.opcode) = Instruction::EQUAL;}
+#line 1576 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 39:
+#line 283 "compiler.y" /* yacc.c:1646  */
+    {(yyval.opcode) = Instruction::INEQUAL;}
+#line 1582 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 40:
+#line 284 "compiler.y" /* yacc.c:1646  */
+    {(yyval.opcode) = Instruction::LESS_EQUAL;}
+#line 1588 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 41:
+#line 285 "compiler.y" /* yacc.c:1646  */
+    {(yyval.opcode) = Instruction::GREATER_EQUAL;}
+#line 1594 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 42:
+#line 288 "compiler.y" /* yacc.c:1646  */
+    {
+				// Setting the type of Operand
+				DataType type = INT_T;
+				if ((yyvsp[-2].operand)->getDataType() == FLOAT_T || (yyvsp[0].operand)->getDataType() == FLOAT_T)
+					type = FLOAT_T;
+
+				// Create destination operand
+				Operand *dest = new Operand(Operand::REGISTER, getRegister(), type);
 
 				// Create a divide instruction
 				Instruction inst (Instruction::ADD, *dest, *(yyvsp[-2].operand), *(yyvsp[0].operand));
@@ -1315,14 +1617,19 @@ yyreduce:
 				// Return destination operand
 				(yyval.operand) = dest;
 			}
-#line 1319 "compiler.tab.c" /* yacc.c:1646  */
+#line 1621 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 25:
-#line 99 "compiler.y" /* yacc.c:1646  */
+  case 43:
+#line 312 "compiler.y" /* yacc.c:1646  */
     { 
+				// Setting the type of Operand
+				DataType type = INT_T;
+				if ((yyvsp[-2].operand)->getDataType() == FLOAT_T || (yyvsp[0].operand)->getDataType() == FLOAT_T)
+					type = FLOAT_T;
+
 				// Create destination operand
-				Operand *dest = new Operand(Operand::REGISTER, getRegister());
+				Operand *dest = new Operand(Operand::REGISTER, getRegister(), type);
 
 				// Create a divide instruction
 				Instruction inst (Instruction::SUB, *dest, *(yyvsp[-2].operand), *(yyvsp[0].operand));
@@ -1337,20 +1644,25 @@ yyreduce:
 				// Return destination operand
 				(yyval.operand) = dest;
 			}
-#line 1341 "compiler.tab.c" /* yacc.c:1646  */
+#line 1648 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 26:
-#line 117 "compiler.y" /* yacc.c:1646  */
+  case 44:
+#line 335 "compiler.y" /* yacc.c:1646  */
     { (yyval.operand) = (yyvsp[0].operand); }
-#line 1347 "compiler.tab.c" /* yacc.c:1646  */
+#line 1654 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 27:
-#line 120 "compiler.y" /* yacc.c:1646  */
+  case 45:
+#line 338 "compiler.y" /* yacc.c:1646  */
     { 
+				// Setting the type of Operand
+				DataType type = INT_T;
+				if ((yyvsp[-2].operand)->getDataType() == FLOAT_T || (yyvsp[0].operand)->getDataType() == FLOAT_T)
+					type = FLOAT_T;
+
 				// Create destination operand
-				Operand *dest = new Operand(Operand::REGISTER, getRegister());
+				Operand *dest = new Operand(Operand::REGISTER, getRegister(), type);
 
 				// Create a divide instruction
 				Instruction inst (Instruction::MUL, *dest, *(yyvsp[-2].operand), *(yyvsp[0].operand));
@@ -1365,14 +1677,19 @@ yyreduce:
 				// Return destination operand
 				(yyval.operand) = dest;
 			}
-#line 1369 "compiler.tab.c" /* yacc.c:1646  */
+#line 1681 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 28:
-#line 139 "compiler.y" /* yacc.c:1646  */
-    { 
+  case 46:
+#line 362 "compiler.y" /* yacc.c:1646  */
+    {
+				// Setting the type of Operand
+				DataType type = INT_T;
+				if ((yyvsp[-2].operand)->getDataType() == FLOAT_T || (yyvsp[0].operand)->getDataType() == FLOAT_T)
+					type = FLOAT_T;
+
 				// Create destination operand
-				Operand *dest = new Operand(Operand::REGISTER, getRegister());
+				Operand *dest = new Operand(Operand::REGISTER, getRegister(), type);
 
 				// Create a divide instruction
 				Instruction inst (Instruction::DIV, *dest, *(yyvsp[-2].operand), *(yyvsp[0].operand));
@@ -1387,43 +1704,68 @@ yyreduce:
 				// Return destination operand
 				(yyval.operand) = dest;
 			}
-#line 1391 "compiler.tab.c" /* yacc.c:1646  */
+#line 1708 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 29:
-#line 156 "compiler.y" /* yacc.c:1646  */
+  case 47:
+#line 384 "compiler.y" /* yacc.c:1646  */
     { (yyval.operand) = (yyvsp[0].operand); }
-#line 1397 "compiler.tab.c" /* yacc.c:1646  */
+#line 1714 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 30:
-#line 158 "compiler.y" /* yacc.c:1646  */
+  case 48:
+#line 386 "compiler.y" /* yacc.c:1646  */
     { (yyval.operand)  = (yyvsp[-1].operand);}
-#line 1403 "compiler.tab.c" /* yacc.c:1646  */
+#line 1720 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 31:
-#line 160 "compiler.y" /* yacc.c:1646  */
+  case 49:
+#line 388 "compiler.y" /* yacc.c:1646  */
     { 
 				Operand *dest = new Operand(Operand::CONST, (yyvsp[0].i_val));
 				(yyval.operand) = dest; 
 			}
-#line 1412 "compiler.tab.c" /* yacc.c:1646  */
+#line 1729 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 32:
-#line 165 "compiler.y" /* yacc.c:1646  */
-    {
-				// This is a temporary value. It should use the register number that is stored inside the symbol table.
-				int register_count = getRegister();
-				Operand *dest = new Operand(Operand::REGISTER, register_count);
-				(yyval.operand) = dest;
+  case 50:
+#line 393 "compiler.y" /* yacc.c:1646  */
+    { 
+				Operand *dest = new Operand(Operand::CONST, (yyvsp[0].f_val));
+				(yyval.operand) = dest; 
 			}
-#line 1423 "compiler.tab.c" /* yacc.c:1646  */
+#line 1738 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 51:
+#line 398 "compiler.y" /* yacc.c:1646  */
+    {
+				if (symbolTable.find((yyvsp[0].s_val))){
+					// Variable is declared, we can assign new value.
+					
+					// Get the node for the variable
+					Node temp = symbolTable.getNode((yyvsp[0].s_val));
+
+					
+					// Correct type. Update variable
+					if (temp.getDataType() == INT_T || temp.getDataType() == FLOAT_T){
+						Operand *dest = new Operand(Operand::REGISTER,temp.getRegister(), temp.getDataType());
+						(yyval.operand) = dest;
+					} else {
+						string errmsg = "Variable is not of type Int or Float to be calculated";
+						yyerror(errmsg.c_str());
+					}
+				} else {
+					// Variable is not declared. Print errors.
+					string errmsg = "Variable is not declared!";
+					yyerror(errmsg.c_str());
+				}
+			}
+#line 1765 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1427 "compiler.tab.c" /* yacc.c:1646  */
+#line 1769 "compiler.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1651,12 +1993,12 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 173 "compiler.y" /* yacc.c:1906  */
+#line 422 "compiler.y" /* yacc.c:1906  */
 
 /* additional c code*/\
 
-int yyerror(char *errmsg){
-	printf("%s\n", errmsg);
+int yyerror(char const *errmsg){
+	fprintf(stderr, "%s\n", errmsg);
 }
 
 int main(){

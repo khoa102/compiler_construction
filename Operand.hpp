@@ -3,6 +3,7 @@
 
 #include <string>
 #include <sstream>
+#include "Utilities.hpp"
 
 using namespace std;
 
@@ -21,15 +22,26 @@ class Operand {
 							NONE};				// empty
 
 		Operand();
-		Operand(OperandType, int);
-
+		Operand(OperandType type, int v);
+		Operand(OperandType type, bool v);
+		Operand(OperandType type, float v);
+		Operand(OperandType type, double v);
+		Operand(OperandType type, char v);
+		Operand(OperandType type, string v);
+		Operand (OperandType type, int v, DataType dataType);  // This is for storing register, mem_address or label
 		string dumpOperand();
 		int getOperandValue();
 		OperandType getOperandType();
+		DataType getDataType();
 
 	private:
 		OperandType operandType;
-		int value;
+		int iVal;
+		bool bVal;
+		double fVal;
+		char cVal;
+		string sVal;
+		DataType dataType;
 };
 
 #endif

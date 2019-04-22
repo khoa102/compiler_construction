@@ -46,12 +46,13 @@ extern int yydebug;
 	#include <stdio.h>
 	#include <cstring>
 	#include "BasicBlock.hpp"
-	#include "iostream"
+	#include "SymbolTable.hpp"
+	#include <iostream>
 
-	int yyerror(char *errmsg);
+	int yyerror(char const *errmsg);
 	int yylex(void);
 
-#line 55 "compiler.tab.h" /* yacc.c:1909  */
+#line 56 "compiler.tab.h" /* yacc.c:1909  */
 
 /* Token type.  */
 #ifndef YYTOKENTYPE
@@ -61,12 +62,27 @@ extern int yydebug;
     INT = 258,
     FLOAT = 259,
     VOID = 260,
-    INT_VAL = 261,
-    STR_VAL = 262,
-    FLOAT_VAL = 263,
-    ID = 264,
-    ASSGN = 265,
-    NEWLINE = 266
+    CHAR = 261,
+    BOOL = 262,
+    INT_VAL = 263,
+    STR_VAL = 264,
+    FLOAT_VAL = 265,
+    ID = 266,
+    TRUE = 267,
+    FALSE = 268,
+    CHAR_VAL = 269,
+    IF = 270,
+    ELSE = 271,
+    ASSGN = 272,
+    LO_OR = 273,
+    LO_AND = 274,
+    EQ = 275,
+    NE = 276,
+    LE = 277,
+    GE = 278,
+    LT = 279,
+    GT = 280,
+    NEWLINE = 281
   };
 #endif
 
@@ -75,14 +91,17 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 22 "compiler.y" /* yacc.c:1909  */
+#line 24 "compiler.y" /* yacc.c:1909  */
 
-	int i_val;
-	double f_val;
-	char *s_val;
+	int 	i_val;
+	double 	f_val;
+	char    c_val;
+	bool	b_val;
+	char 	*s_val;
 	Operand *operand;
+	Instruction::Opcode  opcode;
 
-#line 86 "compiler.tab.h" /* yacc.c:1909  */
+#line 105 "compiler.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;
