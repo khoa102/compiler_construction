@@ -49,7 +49,7 @@
 %type <s_val>  	STR_VAL ID
 %type <c_val>	CHAR_VAL
 %type <b_val>	TRUE FALSE 
-%type <operand>	factor term expr bool_base bool_expr 
+%type <operand>	factor term expr bool_base bool_expr bool_term
 %type <opcode> compare
 
 %% /* grammar rules */
@@ -170,7 +170,7 @@ stmt_if		: 	IF '(' bool_expr ')' stmt_block NEWLINE
 
 			}
 			;
-bool_expr	:	 bool_base LO_OR bool_base 
+bool_expr	:	 bool_base LO_OR bool_term 
 			{
 				// Setting the type of Operand
 				DataType type = BOOL_T;
@@ -195,7 +195,7 @@ bool_expr	:	 bool_base LO_OR bool_base
 				// Return destination operand
 				$$ = dest;
 			}
-			|	 bool_base LO_AND bool_base 
+			|	 bool_base LO_AND bool_term 
 			{
 				// Setting the type of Operand
 				DataType type = BOOL_T;
@@ -221,6 +221,14 @@ bool_expr	:	 bool_base LO_OR bool_base
 				$$ = dest;
 			}
 			|	bool_base
+			{
+				$$ = $1;
+			}
+			;
+bool_term	:	'('	bool_expr ')'
+			{
+				$$ = $2;
+			}
 			;
 bool_base	:	expr compare expr
 			{
