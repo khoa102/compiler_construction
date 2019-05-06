@@ -47,12 +47,13 @@ extern int yydebug;
 	#include <cstring>
 	#include "BasicBlock.hpp"
 	#include "SymbolTable.hpp"
+	#include "ControlFlowGraph.hpp"
 	#include <iostream>
 
 	int yyerror(char const *errmsg);
 	int yylex(void);
 
-#line 56 "compiler.tab.h" /* yacc.c:1909  */
+#line 57 "compiler.tab.h" /* yacc.c:1909  */
 
 /* Token type.  */
 #ifndef YYTOKENTYPE
@@ -91,7 +92,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 24 "compiler.y" /* yacc.c:1909  */
+#line 48 "compiler.y" /* yacc.c:1909  */
 
 	int 	i_val;
 	double 	f_val;
@@ -101,7 +102,7 @@ union YYSTYPE
 	Operand *operand;
 	Instruction::Opcode  opcode;
 
-#line 105 "compiler.tab.h" /* yacc.c:1909  */
+#line 106 "compiler.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

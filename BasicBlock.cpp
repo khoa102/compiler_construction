@@ -9,12 +9,13 @@ void BasicBlock::pushBackInstruction(Instruction instruction){
 }
 
 string BasicBlock::dumpBasicBlock(){
-	string result;
+	ostringstream os;
+	os << "L" << blockID << endl;
 	std::list<Instruction>::iterator it;
 	for (it = basicBlock.begin(); it != basicBlock.end(); ++it){
-		result += it->dumpInstruction();
+		os << it->dumpInstruction();
 	}
-	return result;
+	return os.str();
 }
 
 int BasicBlock::getInstructionNum(){

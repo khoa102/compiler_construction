@@ -100,12 +100,13 @@ extern int yydebug;
 	#include <cstring>
 	#include "BasicBlock.hpp"
 	#include "SymbolTable.hpp"
+	#include "ControlFlowGraph.hpp"
 	#include <iostream>
 
 	int yyerror(char const *errmsg);
 	int yylex(void);
 
-#line 109 "compiler.tab.c" /* yacc.c:355  */
+#line 110 "compiler.tab.c" /* yacc.c:355  */
 
 /* Token type.  */
 #ifndef YYTOKENTYPE
@@ -144,7 +145,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 24 "compiler.y" /* yacc.c:355  */
+#line 48 "compiler.y" /* yacc.c:355  */
 
 	int 	i_val;
 	double 	f_val;
@@ -154,7 +155,7 @@ union YYSTYPE
 	Operand *operand;
 	Instruction::Opcode  opcode;
 
-#line 158 "compiler.tab.c" /* yacc.c:355  */
+#line 159 "compiler.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -171,11 +172,28 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 175 "compiler.tab.c" /* yacc.c:358  */
+#line 176 "compiler.tab.c" /* yacc.c:358  */
 /* Unqualified %code blocks.  */
-#line 15 "compiler.y" /* yacc.c:359  */
+#line 16 "compiler.y" /* yacc.c:359  */
 	
-	BasicBlock* block = new BasicBlock(0);
+	// very first block
+	BasicBlock* beginBlock;
+
+	// Control flow graph (CFG)
+	Graph* CFG;
+	
+	// declare a pointer to the current block
+	BasicBlock* currentBlock;
+
+	// structure of if_block_ids
+	typedef struct if_stmt_struct {
+		BasicBlock* begin_block;
+		BasicBlock* true_block;
+		BasicBlock* end_block;
+	} if_stmt_blocks;
+
+	if_stmt_blocks if_stmt;
+
 	SymbolTable symbolTable;
 	int registerCount = 0;
 	int getRegister(){
@@ -183,7 +201,13 @@ int yyparse (void);
 		return registerCount-1;
 	}	
 
-#line 187 "compiler.tab.c" /* yacc.c:359  */
+	int blockID = 1;
+	int getBlockID() {
+		blockID ++;
+		return blockID - 1;
+	}
+
+#line 211 "compiler.tab.c" /* yacc.c:359  */
 
 #ifdef short
 # undef short
@@ -425,16 +449,16 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  2
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   105
+#define YYLAST   117
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  37
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  20
+#define YYNNTS  25
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  51
+#define YYNRULES  58
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  92
+#define YYNSTATES  102
 
 /* YYTRANSLATE[YYX] -- Symbol number corresponding to YYX as returned
    by yylex, with out-of-bounds checking.  */
@@ -452,8 +476,8 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-      32,    33,    28,    26,    34,    27,     2,    29,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,     2,    31,
+      30,    31,    28,    26,    34,    27,     2,    29,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,    33,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -476,19 +500,19 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
        5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
       15,    16,    17,    18,    19,    20,    21,    22,    23,    24,
-      25,    30
+      25,    32
 };
 
 #if YYDEBUG
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,    56,    56,    57,    59,    60,    61,    63,    68,    70,
-      71,    72,    73,    75,    76,    78,    79,    81,    82,    84,
-      85,    87,    88,    89,    90,    92,   115,   138,   168,   173,
-     198,   223,   225,   246,   251,   256,   280,   281,   282,   283,
-     284,   285,   287,   311,   335,   337,   361,   384,   386,   387,
-     392,   397
+       0,    81,    81,    82,    84,    85,    86,    88,    93,    92,
+     102,   103,   104,   105,   107,   108,   110,   111,   113,   114,
+     116,   117,   119,   120,   121,   122,   124,   147,   170,   200,
+     219,   218,   242,   260,   241,   273,   298,   323,   328,   349,
+     354,   359,   363,   387,   388,   389,   390,   391,   392,   394,
+     418,   442,   444,   468,   491,   493,   494,   499,   504
 };
 #endif
 
@@ -500,11 +524,11 @@ static const char *const yytname[] =
   "$end", "error", "$undefined", "INT", "FLOAT", "VOID", "CHAR", "BOOL",
   "INT_VAL", "STR_VAL", "FLOAT_VAL", "ID", "TRUE", "FALSE", "CHAR_VAL",
   "IF", "ELSE", "ASSGN", "LO_OR", "LO_AND", "EQ", "NE", "LE", "GE", "LT",
-  "GT", "'+'", "'-'", "'*'", "'/'", "NEWLINE", "';'", "'('", "')'", "','",
+  "GT", "'+'", "'-'", "'*'", "'/'", "'('", "')'", "NEWLINE", "';'", "','",
   "'{'", "'}'", "$accept", "input", "line", "test_assign", "func_def",
-  "type", "param_lists", "params", "stmt_block", "stmts", "stmt",
-  "stmt_decl", "stmt_assgn", "stmt_if", "bool_expr", "bool_base",
-  "compare", "expr", "term", "factor", YY_NULLPTR
+  "$@1", "type", "param_lists", "params", "stmt_block", "stmts", "stmt",
+  "stmt_decl", "stmt_assgn", "stmt_if", "$@2", "if", "$@3", "$@4",
+  "bool_expr", "bool_base", "compare", "expr", "term", "factor", YY_NULLPTR
 };
 #endif
 
@@ -516,16 +540,16 @@ static const yytype_uint16 yytoknum[] =
        0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
      265,   266,   267,   268,   269,   270,   271,   272,   273,   274,
      275,   276,   277,   278,   279,   280,    43,    45,    42,    47,
-     281,    59,    40,    41,    44,   123,   125
+      40,    41,   281,    59,    44,   123,   125
 };
 # endif
 
-#define YYPACT_NINF -28
+#define YYPACT_NINF -75
 
 #define yypact_value_is_default(Yystate) \
-  (!!((Yystate) == (-28)))
+  (!!((Yystate) == (-75)))
 
-#define YYTABLE_NINF -36
+#define YYTABLE_NINF -43
 
 #define yytable_value_is_error(Yytable_value) \
   0
@@ -534,16 +558,17 @@ static const yytype_uint16 yytoknum[] =
      STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-     -28,     3,   -28,   -28,   -28,   -28,   -28,   -28,   -28,    -2,
-      30,   -28,     4,   -28,    20,    63,   -27,   -28,    30,   -28,
-      31,   -28,    -3,    30,    30,   -28,    30,    30,    39,   -28,
-      81,   -27,   -27,   -28,   -28,   -28,    26,     6,   -28,    11,
-       1,    81,    32,    45,    42,    37,   -28,    15,    33,   -28,
-     -28,   -28,   -28,   -28,    54,    60,    30,    12,    43,    15,
-     -28,    30,    30,    41,     9,   -28,   -28,    66,    73,    27,
-     -28,   -28,    47,    49,   -28,     1,    12,    12,   -28,   -28,
-     -28,   -28,   -28,   -28,    30,   -28,   -28,    57,   -28,   -28,
-      55,   -28
+     -75,    16,   -75,   -75,   -75,   -75,   -75,   -75,   -75,   -16,
+       2,   -75,   -27,   -75,    -3,    69,    37,   -75,     2,   -75,
+      76,   -75,    -5,     2,     2,   -75,     2,     2,    25,   -75,
+     101,    37,    37,   -75,   -75,   -75,    20,    14,   -75,    13,
+     -75,   101,     0,   -75,    23,    51,    63,    79,   -75,     3,
+      78,   -75,   -75,   -75,   -75,    81,    82,    94,     2,    29,
+      77,     3,   -75,   -75,     2,     2,    27,    30,   -75,   -75,
+      29,    83,    10,    62,   -75,   -75,     0,    65,    67,   -75,
+      84,    50,   -75,    29,    29,   -75,   -75,   -75,   -75,   -75,
+     -75,     2,   -75,   -75,   -75,   -75,     0,   -75,   -75,    41,
+     -75,   -75
 };
 
   /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -551,30 +576,33 @@ static const yytype_int8 yypact[] =
      means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-       2,     0,     1,     9,    10,    11,    12,    49,    50,    51,
-       0,     3,     0,     6,     0,     0,    44,    47,     0,    51,
-       0,     4,     0,     0,     0,     5,     0,     0,     0,    48,
-      13,    42,    43,    45,    46,     7,     0,     0,    14,    16,
-       0,     0,     0,     0,     0,     0,    24,    20,     0,    18,
-      21,    22,    23,    15,     0,     0,     0,     0,     0,    20,
-       8,     0,     0,     0,    51,    33,    34,     0,    31,     0,
-      17,    19,     0,     0,    27,     0,     0,     0,    38,    39,
-      40,    41,    36,    37,     0,    25,    26,     0,    29,    30,
-      32,    28
+       2,     0,     1,    10,    11,    12,    13,    56,    57,    58,
+       0,     3,     0,     6,     0,     0,    51,    54,     0,    58,
+       0,     4,     0,     0,     0,     5,     0,     0,     0,    55,
+      14,    49,    50,    52,    53,     7,     0,     0,    15,    17,
+       8,     0,     0,    16,     0,     0,     0,     0,    25,    21,
+       0,    19,    22,    23,    24,    29,     0,     0,     0,     0,
+       0,    21,     9,    30,     0,     0,     0,    58,    39,    40,
+       0,     0,    37,     0,    18,    20,     0,     0,     0,    28,
+       0,     0,    32,     0,     0,    45,    46,    47,    48,    43,
+      44,     0,    31,    26,    27,    41,     0,    35,    36,    38,
+      33,    34
 };
 
   /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -28,   -28,   -28,   -28,   -28,    95,   -28,    59,    28,    46,
-     -26,   -28,   -28,   -28,   -28,    18,   -28,    -1,    74,    75
+     -75,   -75,   -75,   -75,   -75,   -75,   111,   -75,    75,   -74,
+      56,   -11,   -75,   -75,   -75,   -75,   -75,   -75,   -75,   -40,
+     -75,   -75,    -1,    32,    52
 };
 
   /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-      -1,     1,    11,    12,    13,    36,    37,    38,    48,    58,
-      49,    50,    51,    52,    67,    68,    84,    69,    16,    17
+      -1,     1,    11,    12,    13,    42,    36,    37,    38,    50,
+      60,    51,    52,    53,    54,    76,    55,    96,   101,    71,
+      72,    91,    73,    16,    17
 };
 
   /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -582,32 +610,34 @@ static const yytype_int8 yydefgoto[] =
      number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-      15,    26,    27,     2,    42,    43,     3,     4,     5,    20,
-       6,     7,    44,     8,     9,    18,    45,    28,    42,    43,
-       7,    59,     8,    64,    65,    66,    44,   -35,   -35,    30,
-      45,    22,    46,    59,    21,    10,    47,    39,     7,    40,
-       8,    19,   -35,    54,    10,    41,    46,    78,    79,    80,
-      81,    82,    83,    23,    24,    63,    55,    23,    24,    56,
-      72,    73,    10,    60,    29,    23,    24,    23,    24,    57,
-      35,    61,    74,    23,    24,    23,    24,    62,    85,    70,
-      86,    23,    24,    90,     3,     4,     5,    91,     6,    23,
-      24,    76,    77,    25,    88,    89,    14,    31,    32,    75,
-      53,    33,    34,    87,     0,    71
+      15,    18,    92,    44,    45,    21,    44,    45,    22,    20,
+       7,    46,     8,    19,    46,    47,     2,    28,    47,     3,
+       4,     5,   100,     6,     7,    30,     8,     9,    83,    84,
+      80,    39,    10,    48,    56,    49,    48,     7,    61,     8,
+      67,    68,    69,    97,    98,    40,    10,    41,   -42,   -42,
+      61,    23,    24,    23,    24,    31,    32,    66,    35,    70,
+      79,   -42,    57,    77,    78,    26,    27,    23,    24,    81,
+      85,    86,    87,    88,    89,    90,    23,    24,    33,    34,
+      58,    29,    85,    86,    87,    88,    89,    90,    23,    24,
+      99,    23,    24,    23,    24,    23,    24,    63,    93,    64,
+      94,    25,    23,    24,     3,     4,     5,    29,     6,    59,
+      62,    65,    14,    74,    82,    95,    43,    75
 };
 
-static const yytype_int8 yycheck[] =
+static const yytype_uint8 yycheck[] =
 {
-       1,    28,    29,     0,     3,     4,     3,     4,     5,    10,
-       7,     8,    11,    10,    11,    17,    15,    18,     3,     4,
-       8,    47,    10,    11,    12,    13,    11,    18,    19,    32,
-      15,    11,    31,    59,    30,    32,    35,    11,     8,    33,
-      10,    11,    33,    11,    32,    34,    31,    20,    21,    22,
-      23,    24,    25,    26,    27,    56,    11,    26,    27,    17,
-      61,    62,    32,    30,    33,    26,    27,    26,    27,    32,
-      31,    17,    31,    26,    27,    26,    27,    17,    31,    36,
-      31,    26,    27,    84,     3,     4,     5,    30,     7,    26,
-      27,    18,    19,    30,    76,    77,     1,    23,    24,    33,
-      41,    26,    27,    75,    -1,    59
+       1,    17,    76,     3,     4,    32,     3,     4,    11,    10,
+       8,    11,    10,    11,    11,    15,     0,    18,    15,     3,
+       4,     5,    96,     7,     8,    30,    10,    11,    18,    19,
+      70,    11,    30,    33,    11,    35,    33,     8,    49,    10,
+      11,    12,    13,    83,    84,    31,    30,    34,    18,    19,
+      61,    26,    27,    26,    27,    23,    24,    58,    33,    30,
+      33,    31,    11,    64,    65,    28,    29,    26,    27,    70,
+      20,    21,    22,    23,    24,    25,    26,    27,    26,    27,
+      17,    31,    20,    21,    22,    23,    24,    25,    26,    27,
+      91,    26,    27,    26,    27,    26,    27,    16,    33,    17,
+      33,    32,    26,    27,     3,     4,     5,    31,     7,    30,
+      32,    17,     1,    36,    31,    31,    41,    61
 };
 
   /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
@@ -615,37 +645,38 @@ static const yytype_int8 yycheck[] =
 static const yytype_uint8 yystos[] =
 {
        0,    38,     0,     3,     4,     5,     7,     8,    10,    11,
-      32,    39,    40,    41,    42,    54,    55,    56,    17,    11,
-      54,    30,    11,    26,    27,    30,    28,    29,    54,    33,
-      32,    55,    55,    56,    56,    31,    42,    43,    44,    11,
-      33,    34,     3,     4,    11,    15,    31,    35,    45,    47,
-      48,    49,    50,    44,    11,    11,    17,    32,    46,    47,
-      30,    17,    17,    54,    11,    12,    13,    51,    52,    54,
-      36,    46,    54,    54,    31,    33,    18,    19,    20,    21,
-      22,    23,    24,    25,    53,    31,    31,    45,    52,    52,
-      54,    30
+      30,    39,    40,    41,    43,    59,    60,    61,    17,    11,
+      59,    32,    11,    26,    27,    32,    28,    29,    59,    31,
+      30,    60,    60,    61,    61,    33,    43,    44,    45,    11,
+      31,    34,    42,    45,     3,     4,    11,    15,    33,    35,
+      46,    48,    49,    50,    51,    53,    11,    11,    17,    30,
+      47,    48,    32,    16,    17,    17,    59,    11,    12,    13,
+      30,    56,    57,    59,    36,    47,    52,    59,    59,    33,
+      56,    59,    31,    18,    19,    20,    21,    22,    23,    24,
+      25,    58,    46,    33,    33,    31,    54,    56,    56,    59,
+      46,    55
 };
 
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,    37,    38,    38,    39,    39,    39,    40,    41,    42,
-      42,    42,    42,    43,    43,    44,    44,    45,    45,    46,
-      46,    47,    47,    47,    47,    48,    48,    49,    50,    51,
-      51,    51,    52,    52,    52,    52,    53,    53,    53,    53,
-      53,    53,    54,    54,    54,    55,    55,    55,    56,    56,
-      56,    56
+       0,    37,    38,    38,    39,    39,    39,    40,    42,    41,
+      43,    43,    43,    43,    44,    44,    45,    45,    46,    46,
+      47,    47,    48,    48,    48,    48,    49,    49,    50,    51,
+      52,    51,    54,    55,    53,    56,    56,    56,    57,    57,
+      57,    57,    57,    58,    58,    58,    58,    58,    58,    59,
+      59,    59,    60,    60,    60,    61,    61,    61,    61
 };
 
   /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
-       0,     2,     0,     2,     2,     2,     1,     4,     7,     1,
-       1,     1,     1,     0,     1,     4,     2,     3,     1,     2,
-       0,     1,     1,     1,     1,     5,     5,     4,     6,     3,
-       3,     1,     3,     1,     1,     1,     1,     1,     1,     1,
-       1,     1,     3,     3,     1,     3,     3,     1,     3,     1,
-       1,     1
+       0,     2,     0,     2,     2,     2,     1,     4,     0,     8,
+       1,     1,     1,     1,     0,     1,     4,     2,     3,     1,
+       2,     0,     1,     1,     1,     1,     5,     5,     4,     1,
+       0,     4,     0,     0,     7,     3,     3,     1,     3,     1,
+       1,     3,     1,     1,     1,     1,     1,     1,     1,     3,
+       3,     1,     3,     3,     1,     3,     1,     1,     1
 };
 
 
@@ -1322,21 +1353,26 @@ yyreduce:
   switch (yyn)
     {
         case 7:
-#line 64 "compiler.y" /* yacc.c:1646  */
+#line 89 "compiler.y" /* yacc.c:1646  */
     {
-				cout << "dumpBasicBlock():\n"<< block -> dumpBasicBlock()<<endl;
 			}
-#line 1330 "compiler.tab.c" /* yacc.c:1646  */
+#line 1360 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 68 "compiler.y" /* yacc.c:1646  */
-    {cout << "dumpBasicBlock():\n"<< block -> dumpBasicBlock()<<endl;}
-#line 1336 "compiler.tab.c" /* yacc.c:1646  */
+#line 93 "compiler.y" /* yacc.c:1646  */
+    {
+				// Create a new block for the body of the function
+				currentBlock = new BasicBlock(getBlockID());
+
+				// Add the block to the CFG
+				CFG->addEdge(CFG->lastAddedBlockID, *currentBlock);
+			}
+#line 1372 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 25:
-#line 93 "compiler.y" /* yacc.c:1646  */
+  case 26:
+#line 125 "compiler.y" /* yacc.c:1646  */
     { 
 				if (!symbolTable.find((yyvsp[-3].s_val))){
 					// Create destination operand
@@ -1347,7 +1383,7 @@ yyreduce:
 					Instruction inst (Instruction::STORE, *dest, *(yyvsp[-1].operand));
 
 					// Add instruction to current block
-					block -> pushBackInstruction(inst);
+					currentBlock -> pushBackInstruction(inst);
 					
 					// Remove source operands
 					delete (yyvsp[-1].operand);
@@ -1358,11 +1394,11 @@ yyreduce:
 					// The variable is already declared. Print errors
 				}
 			}
-#line 1362 "compiler.tab.c" /* yacc.c:1646  */
+#line 1398 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 26:
-#line 115 "compiler.y" /* yacc.c:1646  */
+  case 27:
+#line 147 "compiler.y" /* yacc.c:1646  */
     { 
 				if (!symbolTable.find((yyvsp[-3].s_val))){
 					// Create destination operand
@@ -1373,7 +1409,7 @@ yyreduce:
 					Instruction inst (Instruction::STORE, *dest, *(yyvsp[-1].operand));
 
 					// Add instruction to current block
-					block -> pushBackInstruction(inst);
+					currentBlock -> pushBackInstruction(inst);
 					
 					// Remove source operands
 					delete (yyvsp[-1].operand);
@@ -1385,11 +1421,11 @@ yyreduce:
 					yyerror(errmsg.c_str());
 				}
 			}
-#line 1389 "compiler.tab.c" /* yacc.c:1646  */
+#line 1425 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 27:
-#line 139 "compiler.y" /* yacc.c:1646  */
+  case 28:
+#line 171 "compiler.y" /* yacc.c:1646  */
     {
 				if (symbolTable.find((yyvsp[-3].s_val))){
 					// Variable is declared, we can assign new value.
@@ -1406,7 +1442,7 @@ yyreduce:
 						Instruction inst (Instruction::STORE, *dest, *(yyvsp[-1].operand));
 
 						// Add instruction to current block
-						block -> pushBackInstruction(inst);
+						currentBlock -> pushBackInstruction(inst);
 					} else {
 						// Wrong type. Errors
 						string errmgs = "The expr is not the same type as the ID.";
@@ -1418,19 +1454,107 @@ yyreduce:
 					yyerror(errmsg.c_str());
 				}
 			}
-#line 1422 "compiler.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 28:
-#line 169 "compiler.y" /* yacc.c:1646  */
-    {
-
-			}
-#line 1430 "compiler.tab.c" /* yacc.c:1646  */
+#line 1458 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 174 "compiler.y" /* yacc.c:1646  */
+#line 201 "compiler.y" /* yacc.c:1646  */
+    {
+				// emit jump without condition instruction
+				Instruction inst(Instruction::JUMP, Operand(Operand::LABEL, if_stmt.end_block->blockID));
+
+				// push it to the begin_block
+				if_stmt.begin_block->pushBackInstruction(inst);
+
+				// add blocks to graph
+				CFG->addEdge(CFG->lastAddedBlockID, *(if_stmt.begin_block));
+				CFG->addEdge(if_stmt.begin_block->blockID, *(if_stmt.true_block));
+
+				// continue codes after if-statement
+				currentBlock = if_stmt.end_block;
+
+				delete if_stmt.begin_block;
+				delete if_stmt.true_block;
+			}
+#line 1480 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 30:
+#line 219 "compiler.y" /* yacc.c:1646  */
+    {
+				currentBlock = if_stmt.begin_block;
+			}
+#line 1488 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 31:
+#line 223 "compiler.y" /* yacc.c:1646  */
+    {
+				// emit jump without condition instruction
+				Instruction inst(Instruction::JUMP, Operand(Operand::LABEL, if_stmt.end_block->blockID));
+
+				// push it to the begin_block
+				if_stmt.begin_block->pushBackInstruction(inst);
+
+				// add blocks to graph
+				CFG->addEdge(CFG->lastAddedBlockID, *(if_stmt.begin_block));
+				CFG->addEdge(if_stmt.begin_block->blockID, *(if_stmt.true_block));
+
+				// continue codes after if-statement
+				currentBlock = if_stmt.end_block;
+
+				delete if_stmt.begin_block;
+				delete if_stmt.true_block;
+			}
+#line 1510 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 32:
+#line 242 "compiler.y" /* yacc.c:1646  */
+    {
+					/****** if condition part ******/
+					if_stmt.begin_block = currentBlock;	
+
+					if_stmt.true_block = new BasicBlock(getBlockID()); 
+
+					// emit jump with condition instruction
+					Instruction inst(Instruction::JUMP_TRUE, Operand(Operand::LABEL, if_stmt.true_block->blockID), *(yyvsp[-1].operand));
+
+					// push it to the begin_block
+					if_stmt.begin_block->pushBackInstruction(inst);
+
+					// set currentBlock to true_block
+					currentBlock = if_stmt.true_block;
+					
+					delete (yyvsp[-1].operand);
+				}
+#line 1532 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 33:
+#line 260 "compiler.y" /* yacc.c:1646  */
+    {
+					/***** if_true block ****/
+					if_stmt.end_block = new BasicBlock(getBlockID());
+
+					Instruction inst(Instruction::JUMP, Operand(Operand::LABEL, if_stmt.end_block->blockID));
+
+					// push it to the true_block
+					if_stmt.true_block->pushBackInstruction(inst);
+				}
+#line 1546 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 34:
+#line 269 "compiler.y" /* yacc.c:1646  */
+    {
+
+			}
+#line 1554 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 35:
+#line 274 "compiler.y" /* yacc.c:1646  */
     {
 				// Setting the type of Operand
 				DataType type = BOOL_T;
@@ -1442,11 +1566,11 @@ yyreduce:
 				Instruction inst (Instruction::STORE, *dest, *(yyvsp[0].operand));
 
 				// Add instruction to current block
-				block -> pushBackInstruction(inst);
+				currentBlock -> pushBackInstruction(inst);
 				
 				// Doing the AND operation
 				Instruction inst2 (Instruction::AND, *dest, *(yyvsp[-2].operand));
-				block -> pushBackInstruction(inst2);
+				currentBlock -> pushBackInstruction(inst2);
 
 				// Remove source operands
 				delete (yyvsp[-2].operand);
@@ -1455,11 +1579,11 @@ yyreduce:
 				// Return destination operand
 				(yyval.operand) = dest;
 			}
-#line 1459 "compiler.tab.c" /* yacc.c:1646  */
+#line 1583 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 30:
-#line 199 "compiler.y" /* yacc.c:1646  */
+  case 36:
+#line 299 "compiler.y" /* yacc.c:1646  */
     {
 				// Setting the type of Operand
 				DataType type = BOOL_T;
@@ -1471,11 +1595,11 @@ yyreduce:
 				Instruction inst (Instruction::STORE, *dest, *(yyvsp[-2].operand));
 
 				// Add instruction to current block
-				block -> pushBackInstruction(inst);
+				currentBlock -> pushBackInstruction(inst);
 				
 				// Doing the AND operation
-				Instruction inst2 (Instruction::OR, *dest, *(yyvsp[0].operand));
-				block -> pushBackInstruction(inst2);
+				Instruction inst2 (Instruction::AND, *dest, *(yyvsp[0].operand));
+				currentBlock -> pushBackInstruction(inst2);
 
 				// Remove source operands
 				delete (yyvsp[-2].operand);
@@ -1484,11 +1608,19 @@ yyreduce:
 				// Return destination operand
 				(yyval.operand) = dest;
 			}
-#line 1488 "compiler.tab.c" /* yacc.c:1646  */
+#line 1612 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 32:
-#line 226 "compiler.y" /* yacc.c:1646  */
+  case 37:
+#line 324 "compiler.y" /* yacc.c:1646  */
+    {
+				(yyval.operand) = (yyvsp[0].operand);
+			}
+#line 1620 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 38:
+#line 329 "compiler.y" /* yacc.c:1646  */
     {
 				// Setting the type of Operand
 				DataType type = BOOL_T;
@@ -1500,7 +1632,7 @@ yyreduce:
 				Instruction inst ((yyvsp[-1].opcode), *dest, *(yyvsp[-2].operand), *(yyvsp[0].operand));
 
 				// Add instruction to current block
-				block -> pushBackInstruction(inst);
+				currentBlock -> pushBackInstruction(inst);
 				
 				// Remove source operands
 				delete (yyvsp[-2].operand);
@@ -1509,29 +1641,37 @@ yyreduce:
 				// Return destination operand
 				(yyval.operand) = dest;
 			}
-#line 1513 "compiler.tab.c" /* yacc.c:1646  */
+#line 1645 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 33:
-#line 247 "compiler.y" /* yacc.c:1646  */
+  case 39:
+#line 350 "compiler.y" /* yacc.c:1646  */
     {
 				Operand *dest = new Operand(Operand::CONST, (yyvsp[0].b_val));
 				(yyval.operand) = dest; 
 			}
-#line 1522 "compiler.tab.c" /* yacc.c:1646  */
+#line 1654 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 34:
-#line 252 "compiler.y" /* yacc.c:1646  */
+  case 40:
+#line 355 "compiler.y" /* yacc.c:1646  */
     {
 				Operand *dest = new Operand(Operand::CONST, (yyvsp[0].b_val));
 				(yyval.operand) = dest; 
 			}
-#line 1531 "compiler.tab.c" /* yacc.c:1646  */
+#line 1663 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 35:
-#line 257 "compiler.y" /* yacc.c:1646  */
+  case 41:
+#line 360 "compiler.y" /* yacc.c:1646  */
+    {
+				(yyval.operand) = (yyvsp[-1].operand);
+			}
+#line 1671 "compiler.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 42:
+#line 364 "compiler.y" /* yacc.c:1646  */
     {
 				if (symbolTable.find((yyvsp[0].s_val))){
 					// Variable is declared, we can assign new value.
@@ -1554,47 +1694,47 @@ yyreduce:
 					yyerror(errmsg.c_str());
 				}
 			}
-#line 1558 "compiler.tab.c" /* yacc.c:1646  */
+#line 1698 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 36:
-#line 280 "compiler.y" /* yacc.c:1646  */
+  case 43:
+#line 387 "compiler.y" /* yacc.c:1646  */
     {(yyval.opcode) = Instruction::LESS_THAN;}
-#line 1564 "compiler.tab.c" /* yacc.c:1646  */
+#line 1704 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 37:
-#line 281 "compiler.y" /* yacc.c:1646  */
+  case 44:
+#line 388 "compiler.y" /* yacc.c:1646  */
     {(yyval.opcode) = Instruction::GREATER_THAN;}
-#line 1570 "compiler.tab.c" /* yacc.c:1646  */
+#line 1710 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 38:
-#line 282 "compiler.y" /* yacc.c:1646  */
+  case 45:
+#line 389 "compiler.y" /* yacc.c:1646  */
     {(yyval.opcode) = Instruction::EQUAL;}
-#line 1576 "compiler.tab.c" /* yacc.c:1646  */
+#line 1716 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 39:
-#line 283 "compiler.y" /* yacc.c:1646  */
+  case 46:
+#line 390 "compiler.y" /* yacc.c:1646  */
     {(yyval.opcode) = Instruction::INEQUAL;}
-#line 1582 "compiler.tab.c" /* yacc.c:1646  */
+#line 1722 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 40:
-#line 284 "compiler.y" /* yacc.c:1646  */
+  case 47:
+#line 391 "compiler.y" /* yacc.c:1646  */
     {(yyval.opcode) = Instruction::LESS_EQUAL;}
-#line 1588 "compiler.tab.c" /* yacc.c:1646  */
+#line 1728 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 41:
-#line 285 "compiler.y" /* yacc.c:1646  */
+  case 48:
+#line 392 "compiler.y" /* yacc.c:1646  */
     {(yyval.opcode) = Instruction::GREATER_EQUAL;}
-#line 1594 "compiler.tab.c" /* yacc.c:1646  */
+#line 1734 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 42:
-#line 288 "compiler.y" /* yacc.c:1646  */
+  case 49:
+#line 395 "compiler.y" /* yacc.c:1646  */
     {
 				// Setting the type of Operand
 				DataType type = INT_T;
@@ -1608,7 +1748,7 @@ yyreduce:
 				Instruction inst (Instruction::ADD, *dest, *(yyvsp[-2].operand), *(yyvsp[0].operand));
 
 				// Add instruction to current block
-				block -> pushBackInstruction(inst);
+				currentBlock -> pushBackInstruction(inst);
 				
 				// Remove source operands
 				delete (yyvsp[-2].operand);
@@ -1617,11 +1757,11 @@ yyreduce:
 				// Return destination operand
 				(yyval.operand) = dest;
 			}
-#line 1621 "compiler.tab.c" /* yacc.c:1646  */
+#line 1761 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 43:
-#line 312 "compiler.y" /* yacc.c:1646  */
+  case 50:
+#line 419 "compiler.y" /* yacc.c:1646  */
     { 
 				// Setting the type of Operand
 				DataType type = INT_T;
@@ -1635,7 +1775,7 @@ yyreduce:
 				Instruction inst (Instruction::SUB, *dest, *(yyvsp[-2].operand), *(yyvsp[0].operand));
 
 				// Add instruction to current block
-				block -> pushBackInstruction(inst);
+				currentBlock -> pushBackInstruction(inst);
 				
 				// Remove source operands
 				delete (yyvsp[-2].operand);
@@ -1644,17 +1784,17 @@ yyreduce:
 				// Return destination operand
 				(yyval.operand) = dest;
 			}
-#line 1648 "compiler.tab.c" /* yacc.c:1646  */
+#line 1788 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 44:
-#line 335 "compiler.y" /* yacc.c:1646  */
+  case 51:
+#line 442 "compiler.y" /* yacc.c:1646  */
     { (yyval.operand) = (yyvsp[0].operand); }
-#line 1654 "compiler.tab.c" /* yacc.c:1646  */
+#line 1794 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 45:
-#line 338 "compiler.y" /* yacc.c:1646  */
+  case 52:
+#line 445 "compiler.y" /* yacc.c:1646  */
     { 
 				// Setting the type of Operand
 				DataType type = INT_T;
@@ -1668,7 +1808,7 @@ yyreduce:
 				Instruction inst (Instruction::MUL, *dest, *(yyvsp[-2].operand), *(yyvsp[0].operand));
 
 				// Add instruction to current block
-				block -> pushBackInstruction(inst);
+				currentBlock -> pushBackInstruction(inst);
 				
 				// Remove source operands
 				delete (yyvsp[-2].operand);
@@ -1677,11 +1817,11 @@ yyreduce:
 				// Return destination operand
 				(yyval.operand) = dest;
 			}
-#line 1681 "compiler.tab.c" /* yacc.c:1646  */
+#line 1821 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 46:
-#line 362 "compiler.y" /* yacc.c:1646  */
+  case 53:
+#line 469 "compiler.y" /* yacc.c:1646  */
     {
 				// Setting the type of Operand
 				DataType type = INT_T;
@@ -1695,7 +1835,7 @@ yyreduce:
 				Instruction inst (Instruction::DIV, *dest, *(yyvsp[-2].operand), *(yyvsp[0].operand));
 
 				// Add instruction to current block
-				block -> pushBackInstruction(inst);
+				currentBlock -> pushBackInstruction(inst);
 
 				// Remove source operands
 				delete (yyvsp[-2].operand);
@@ -1704,41 +1844,41 @@ yyreduce:
 				// Return destination operand
 				(yyval.operand) = dest;
 			}
-#line 1708 "compiler.tab.c" /* yacc.c:1646  */
+#line 1848 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 47:
-#line 384 "compiler.y" /* yacc.c:1646  */
+  case 54:
+#line 491 "compiler.y" /* yacc.c:1646  */
     { (yyval.operand) = (yyvsp[0].operand); }
-#line 1714 "compiler.tab.c" /* yacc.c:1646  */
+#line 1854 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 48:
-#line 386 "compiler.y" /* yacc.c:1646  */
+  case 55:
+#line 493 "compiler.y" /* yacc.c:1646  */
     { (yyval.operand)  = (yyvsp[-1].operand);}
-#line 1720 "compiler.tab.c" /* yacc.c:1646  */
+#line 1860 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 49:
-#line 388 "compiler.y" /* yacc.c:1646  */
+  case 56:
+#line 495 "compiler.y" /* yacc.c:1646  */
     { 
 				Operand *dest = new Operand(Operand::CONST, (yyvsp[0].i_val));
 				(yyval.operand) = dest; 
 			}
-#line 1729 "compiler.tab.c" /* yacc.c:1646  */
+#line 1869 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 50:
-#line 393 "compiler.y" /* yacc.c:1646  */
+  case 57:
+#line 500 "compiler.y" /* yacc.c:1646  */
     { 
 				Operand *dest = new Operand(Operand::CONST, (yyvsp[0].f_val));
 				(yyval.operand) = dest; 
 			}
-#line 1738 "compiler.tab.c" /* yacc.c:1646  */
+#line 1878 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
-  case 51:
-#line 398 "compiler.y" /* yacc.c:1646  */
+  case 58:
+#line 505 "compiler.y" /* yacc.c:1646  */
     {
 				if (symbolTable.find((yyvsp[0].s_val))){
 					// Variable is declared, we can assign new value.
@@ -1761,11 +1901,11 @@ yyreduce:
 					yyerror(errmsg.c_str());
 				}
 			}
-#line 1765 "compiler.tab.c" /* yacc.c:1646  */
+#line 1905 "compiler.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1769 "compiler.tab.c" /* yacc.c:1646  */
+#line 1909 "compiler.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1993,7 +2133,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 422 "compiler.y" /* yacc.c:1906  */
+#line 529 "compiler.y" /* yacc.c:1906  */
 
 /* additional c code*/\
 
@@ -2003,7 +2143,26 @@ int yyerror(char const *errmsg){
 
 int main(){
 	printf("Type some input. Enter ? for help.\n");
+	beginBlock = new BasicBlock(0);
+
+	// add it to the graph as a base block
+	CFG = new Graph(*beginBlock);
+
+	// create the current block
+	currentBlock = new BasicBlock(getBlockID());
+
+	// call parser
 	yyparse();
+
+	// add the current block to CFG
+	CFG->addEdge(CFG->lastAddedBlockID, *currentBlock);
+
+	CFG->dumpGraph();
+
+	//cout << "\n\n... Symbol table ... \n" << symbolTable.dumpSymbolTable() << endl;
+
+	delete currentBlock;
+	delete CFG;
 
 	return 0;
 }

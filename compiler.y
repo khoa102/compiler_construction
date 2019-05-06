@@ -6,6 +6,7 @@
 	#include <cstring>
 	#include "BasicBlock.hpp"
 	#include "SymbolTable.hpp"
+	#include "ControlFlowGraph.hpp"
 	#include <iostream>
 
 	int yyerror(char const *errmsg);
@@ -13,13 +14,36 @@
 }
 
 %code{	
-	BasicBlock* block = new BasicBlock(0);
+	// very first block
+	BasicBlock* beginBlock;
+
+	// Control flow graph (CFG)
+	Graph* CFG;
+	
+	// declare a pointer to the current block
+	BasicBlock* currentBlock;
+
+	// structure of if_block_ids
+	typedef struct if_stmt_struct {
+		BasicBlock* begin_block;
+		BasicBlock* true_block;
+		BasicBlock* end_block;
+	} if_stmt_blocks;
+
+	if_stmt_blocks if_stmt;
+
 	SymbolTable symbolTable;
 	int registerCount = 0;
 	int getRegister(){
 		registerCount++;
 		return registerCount-1;
 	}	
+
+	int blockID = 1;
+	int getBlockID() {
+		blockID ++;
+		return blockID - 1;
+	}
 }
 %union{
 	int 	i_val;
@@ -42,6 +66,7 @@
 %left  LE GE LT GT
 %left '+' '-'
 %left '*' '/'
+%left '(' ')'
 %token NEWLINE ';'
 
 %type <i_val>  	INT_VAL
@@ -49,7 +74,7 @@
 %type <s_val>  	STR_VAL ID
 %type <c_val>	CHAR_VAL
 %type <b_val>	TRUE FALSE 
-%type <operand>	factor term expr bool_base bool_expr bool_term
+%type <operand>	factor term expr bool_base bool_expr
 %type <opcode> compare
 
 %% /* grammar rules */
@@ -62,10 +87,17 @@ line		:	test_assign  NEWLINE
 			;
 test_assign :	ID ASSGN expr ';'
 			{
-				cout << "dumpBasicBlock():\n"<< block -> dumpBasicBlock()<<endl;
 			}
 			;
-func_def 	:	type ID '(' param_lists ')'  stmt_block NEWLINE 	{cout << "dumpBasicBlock():\n"<< block -> dumpBasicBlock()<<endl;}
+func_def 	:	type ID '(' param_lists ')'   	
+			{
+				// Create a new block for the body of the function
+				currentBlock = new BasicBlock(getBlockID());
+
+				// Add the block to the CFG
+				CFG->addEdge(CFG->lastAddedBlockID, *currentBlock);
+			}	
+				stmt_block NEWLINE
 			;
 type 		:	INT
 			|	FLOAT
@@ -100,7 +132,7 @@ stmt_decl 	:	INT ID ASSGN expr ';'
 					Instruction inst (Instruction::STORE, *dest, *$4);
 
 					// Add instruction to current block
-					block -> pushBackInstruction(inst);
+					currentBlock -> pushBackInstruction(inst);
 					
 					// Remove source operands
 					delete $4;
@@ -122,7 +154,7 @@ stmt_decl 	:	INT ID ASSGN expr ';'
 					Instruction inst (Instruction::STORE, *dest, *$4);
 
 					// Add instruction to current block
-					block -> pushBackInstruction(inst);
+					currentBlock -> pushBackInstruction(inst);
 					
 					// Remove source operands
 					delete $4;
@@ -152,7 +184,7 @@ stmt_assgn  :	ID ASSGN expr ';'
 						Instruction inst (Instruction::STORE, *dest, *$3);
 
 						// Add instruction to current block
-						block -> pushBackInstruction(inst);
+						currentBlock -> pushBackInstruction(inst);
 					} else {
 						// Wrong type. Errors
 						string errmgs = "The expr is not the same type as the ID.";
@@ -165,12 +197,80 @@ stmt_assgn  :	ID ASSGN expr ';'
 				}
 			}
 			;
-stmt_if		: 	IF '(' bool_expr ')' stmt_block NEWLINE
+stmt_if		: 	if %prec '+'
+			{
+				// emit jump without condition instruction
+				Instruction inst(Instruction::JUMP, Operand(Operand::LABEL, if_stmt.end_block->blockID));
+
+				// push it to the begin_block
+				if_stmt.begin_block->pushBackInstruction(inst);
+
+				// add blocks to graph
+				CFG->addEdge(CFG->lastAddedBlockID, *(if_stmt.begin_block));
+				CFG->addEdge(if_stmt.begin_block->blockID, *(if_stmt.true_block));
+
+				// continue codes after if-statement
+				currentBlock = if_stmt.end_block;
+
+				delete if_stmt.begin_block;
+				delete if_stmt.true_block;
+			}
+			|	if ELSE 
+			{
+				currentBlock = if_stmt.begin_block;
+			}
+			stmt_block %prec '*'		// all instructions here are added to begin_block
+			{
+				// emit jump without condition instruction
+				Instruction inst(Instruction::JUMP, Operand(Operand::LABEL, if_stmt.end_block->blockID));
+
+				// push it to the begin_block
+				if_stmt.begin_block->pushBackInstruction(inst);
+
+				// add blocks to graph
+				CFG->addEdge(CFG->lastAddedBlockID, *(if_stmt.begin_block));
+				CFG->addEdge(if_stmt.begin_block->blockID, *(if_stmt.true_block));
+
+				// continue codes after if-statement
+				currentBlock = if_stmt.end_block;
+
+				delete if_stmt.begin_block;
+				delete if_stmt.true_block;
+			}
+			;
+if			:	IF '(' bool_expr ')' 
+				{
+					/****** if condition part ******/
+					if_stmt.begin_block = currentBlock;	
+
+					if_stmt.true_block = new BasicBlock(getBlockID()); 
+
+					// emit jump with condition instruction
+					Instruction inst(Instruction::JUMP_TRUE, Operand(Operand::LABEL, if_stmt.true_block->blockID), *$3);
+
+					// push it to the begin_block
+					if_stmt.begin_block->pushBackInstruction(inst);
+
+					// set currentBlock to true_block
+					currentBlock = if_stmt.true_block;
+					
+					delete $3;
+				}
+				stmt_block
+				{
+					/***** if_true block ****/
+					if_stmt.end_block = new BasicBlock(getBlockID());
+
+					Instruction inst(Instruction::JUMP, Operand(Operand::LABEL, if_stmt.end_block->blockID));
+
+					// push it to the true_block
+					if_stmt.true_block->pushBackInstruction(inst);
+				}
 			{
 
 			}
 			;
-bool_expr	:	 bool_base LO_OR bool_term 
+bool_expr	:	 bool_base LO_OR bool_expr 
 			{
 				// Setting the type of Operand
 				DataType type = BOOL_T;
@@ -182,11 +282,11 @@ bool_expr	:	 bool_base LO_OR bool_term
 				Instruction inst (Instruction::STORE, *dest, *$3);
 
 				// Add instruction to current block
-				block -> pushBackInstruction(inst);
+				currentBlock -> pushBackInstruction(inst);
 				
 				// Doing the AND operation
 				Instruction inst2 (Instruction::AND, *dest, *$1);
-				block -> pushBackInstruction(inst2);
+				currentBlock -> pushBackInstruction(inst2);
 
 				// Remove source operands
 				delete $1;
@@ -195,7 +295,7 @@ bool_expr	:	 bool_base LO_OR bool_term
 				// Return destination operand
 				$$ = dest;
 			}
-			|	 bool_base LO_AND bool_term 
+			|	 bool_base LO_AND bool_expr 
 			{
 				// Setting the type of Operand
 				DataType type = BOOL_T;
@@ -207,11 +307,11 @@ bool_expr	:	 bool_base LO_OR bool_term
 				Instruction inst (Instruction::STORE, *dest, *$1);
 
 				// Add instruction to current block
-				block -> pushBackInstruction(inst);
+				currentBlock -> pushBackInstruction(inst);
 				
 				// Doing the AND operation
-				Instruction inst2 (Instruction::OR, *dest, *$3);
-				block -> pushBackInstruction(inst2);
+				Instruction inst2 (Instruction::AND, *dest, *$3);
+				currentBlock -> pushBackInstruction(inst2);
 
 				// Remove source operands
 				delete $1;
@@ -223,11 +323,6 @@ bool_expr	:	 bool_base LO_OR bool_term
 			|	bool_base
 			{
 				$$ = $1;
-			}
-			;
-bool_term	:	'('	bool_expr ')'
-			{
-				$$ = $2;
 			}
 			;
 bool_base	:	expr compare expr
@@ -242,7 +337,7 @@ bool_base	:	expr compare expr
 				Instruction inst ($2, *dest, *$1, *$3);
 
 				// Add instruction to current block
-				block -> pushBackInstruction(inst);
+				currentBlock -> pushBackInstruction(inst);
 				
 				// Remove source operands
 				delete $1;
@@ -260,6 +355,10 @@ bool_base	:	expr compare expr
 			{
 				Operand *dest = new Operand(Operand::CONST, $1);
 				$$ = dest; 
+			}
+			|	'(' bool_expr ')'
+			{
+				$$ = $2;
 			}
 			|	ID
 			{
@@ -306,7 +405,7 @@ expr		:	expr '+' term
 				Instruction inst (Instruction::ADD, *dest, *$1, *$3);
 
 				// Add instruction to current block
-				block -> pushBackInstruction(inst);
+				currentBlock -> pushBackInstruction(inst);
 				
 				// Remove source operands
 				delete $1;
@@ -330,7 +429,7 @@ expr		:	expr '+' term
 				Instruction inst (Instruction::SUB, *dest, *$1, *$3);
 
 				// Add instruction to current block
-				block -> pushBackInstruction(inst);
+				currentBlock -> pushBackInstruction(inst);
 				
 				// Remove source operands
 				delete $1;
@@ -356,7 +455,7 @@ term		:	term '*' factor
 				Instruction inst (Instruction::MUL, *dest, *$1, *$3);
 
 				// Add instruction to current block
-				block -> pushBackInstruction(inst);
+				currentBlock -> pushBackInstruction(inst);
 				
 				// Remove source operands
 				delete $1;
@@ -380,7 +479,7 @@ term		:	term '*' factor
 				Instruction inst (Instruction::DIV, *dest, *$1, *$3);
 
 				// Add instruction to current block
-				block -> pushBackInstruction(inst);
+				currentBlock -> pushBackInstruction(inst);
 
 				// Remove source operands
 				delete $1;
@@ -436,7 +535,26 @@ int yyerror(char const *errmsg){
 
 int main(){
 	printf("Type some input. Enter ? for help.\n");
+	beginBlock = new BasicBlock(0);
+
+	// add it to the graph as a base block
+	CFG = new Graph(*beginBlock);
+
+	// create the current block
+	currentBlock = new BasicBlock(getBlockID());
+
+	// call parser
 	yyparse();
+
+	// add the current block to CFG
+	CFG->addEdge(CFG->lastAddedBlockID, *currentBlock);
+
+	CFG->dumpGraph();
+
+	//cout << "\n\n... Symbol table ... \n" << symbolTable.dumpSymbolTable() << endl;
+
+	delete currentBlock;
+	delete CFG;
 
 	return 0;
 }
